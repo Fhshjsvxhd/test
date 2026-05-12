@@ -61,8 +61,20 @@ if ! id "$SERVICE_USER" >/dev/null 2>&1; then
 fi
 
 step "Installing Cloakly into $INSTALL_DIR"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/package.json" ] && [ -d "$SCRIPT_DIR/src" ]; then
+
+# When piped through curl | bash, BASH_SOURCE[0] is unset. Guard with :- so
+# `set -u` does not kill us; also skip the "local copy" branch in that case.
+_BS="${BASH_SOURCE[0]:-}"
+SCRIPT_DIR=""
+if [ -n "$_BS" ] && [ -f "$_BS" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "$_BS")" && pwd)"
+fi
+
+# Mark the install dir as a safe git directory for root (in case ownership
+# already belongs to the service user from a previous install).
+git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
+
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/package.json" ] && [ -d "$SCRIPT_DIR/src" ]; then
   if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
     mkdir -p "$INSTALL_DIR"
     cp -a "$SCRIPT_DIR/." "$INSTALL_DIR/"
@@ -71,6 +83,9 @@ if [ -f "$SCRIPT_DIR/package.json" ] && [ -d "$SCRIPT_DIR/src" ]; then
 elif [ -d "$INSTALL_DIR/.git" ]; then
   git -C "$INSTALL_DIR" fetch --all
   git -C "$INSTALL_DIR" reset --hard "origin/$BRANCH"
+elif [ -f "$INSTALL_DIR/package.json" ] && [ -d "$INSTALL_DIR/src" ]; then
+  # Directory already contains source (manually copied), just use it.
+  ok "Using existing source at $INSTALL_DIR"
 else
   mkdir -p "$INSTALL_DIR"
   if ! git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$INSTALL_DIR" 2>/dev/null; then
