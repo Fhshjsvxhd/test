@@ -17,17 +17,93 @@ router.use((req, res, next) => {
 
 // ============ FLOWS CRUD ============
 
-const flowFields = [
-  'slug','name','domain','status',
-  'safe_mode','safe_url','safe_html',
-  'money_mode','money_url','money_html',
-  'block_bots','block_datacenter','block_vpn_proxy','block_headless',
-  'require_js','require_referrer','block_empty_ua','block_no_lang',
-  'countries_mode','countries','devices','os_list','browsers','languages',
-  'blacklist_ips','blacklist_ua',
-  'schedule_enabled','schedule_days','schedule_from','schedule_to',
-  'limit_clicks_per_ip','limit_window_min',
-];
+// Every writable field with its DB type. Used to coerce values into
+// SQLite-compatible types (number | string | bigint | Buffer | null).
+const FIELD_TYPES = {
+  slug:             'text',
+  name:             'text',
+  domain:           'text',
+  status:           'text',
+
+  safe_mode:        'text',
+  safe_url:         'text',
+  safe_html:        'text',
+  money_mode:       'text',
+  money_url:        'text',
+  money_html:       'text',
+
+  block_bots:       'int',
+  block_datacenter: 'int',
+  block_vpn_proxy:  'int',
+  block_headless:   'int',
+  require_js:       'int',
+  require_referrer: 'int',
+  block_empty_ua:   'int',
+  block_no_lang:    'int',
+
+  countries_mode:   'text',
+  countries:        'json',
+  devices:          'json',
+  os_list:          'json',
+  browsers:         'json',
+  languages:        'json',
+
+  blacklist_ips:    'text',
+  blacklist_ua:     'text',
+
+  schedule_enabled: 'int',
+  schedule_days:    'json',
+  schedule_from:    'text',
+  schedule_to:      'text',
+
+  limit_clicks_per_ip: 'int',
+  limit_window_min:    'int',
+};
+
+/**
+ * Coerce an arbitrary JS value into something SQLite can bind.
+ */
+function coerce(type, v) {
+  // undefined or null -> always use a safe default instead of null,
+  // because the DB columns have NOT-NULL-like defaults.
+  if (v === undefined || v === null) {
+    if (type === 'int') return 0;
+    if (type === 'json') return '[]';
+    return '';
+  }
+
+  if (type === 'int') {
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    if (typeof v === 'number') return Number.isFinite(v) ? Math.trunc(v) : 0;
+    if (typeof v === 'string') {
+      const trimmed = v.trim();
+      if (trimmed === '' || trimmed === 'null' || trimmed === 'undefined') return 0;
+      const n = parseInt(trimmed, 10);
+      return Number.isFinite(n) ? n : 0;
+    }
+    return 0;
+  }
+
+  if (type === 'json') {
+    if (typeof v === 'string') return v === '' ? '[]' : v;
+    try { return JSON.stringify(v); } catch { return '[]'; }
+  }
+
+  // text
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'bigint') return String(v);
+  if (typeof v === 'boolean') return v ? '1' : '0';
+  try { return JSON.stringify(v); } catch { return ''; }
+}
+
+function coerceBody(body, { partial = false } = {}) {
+  const out = {};
+  for (const [field, type] of Object.entries(FIELD_TYPES)) {
+    if (partial && !(field in body)) continue;
+    out[field] = coerce(type, body[field]);
+  }
+  return out;
+}
 
 router.get('/flows', (req, res) => {
   const rows = db.prepare(`
@@ -47,42 +123,42 @@ router.get('/flows/:id', (req, res) => {
 });
 
 router.post('/flows', (req, res) => {
-  const data = {};
-  for (const f of flowFields) data[f] = req.body[f] ?? null;
-  if (!data.slug) data.slug = nanoid(8).toLowerCase();
-  if (!data.name) data.name = 'New flow';
-  data.created_at = Date.now();
-  data.updated_at = Date.now();
-
-  // defaults
-  data.safe_mode = data.safe_mode || 'url';
-  data.money_mode = data.money_mode || 'url';
-  data.status = data.status || 'active';
-  data.countries_mode = data.countries_mode || 'any';
-
-  const cols = Object.keys(data);
-  const stmt = db.prepare(
-    `INSERT INTO flows (${cols.join(',')}) VALUES (${cols.map(c => '@' + c).join(',')})`
-  );
   try {
-    const info = stmt.run(data);
+    const data = coerceBody(req.body, { partial: false });
+
+    // defaults
+    if (!data.slug) data.slug = nanoid(8).toLowerCase();
+    if (!data.name) data.name = 'New flow';
+    if (!data.safe_mode)      data.safe_mode = 'url';
+    if (!data.money_mode)     data.money_mode = 'url';
+    if (!data.status)         data.status = 'active';
+    if (!data.countries_mode) data.countries_mode = 'any';
+
+    data.created_at = Date.now();
+    data.updated_at = Date.now();
+
+    const cols = Object.keys(data);
+    const info = db.prepare(
+      `INSERT INTO flows (${cols.join(',')}) VALUES (${cols.map(c => '@' + c).join(',')})`
+    ).run(data);
     res.json({ ok: true, id: info.lastInsertRowid, slug: data.slug });
   } catch (e) {
+    console.error('POST /flows error:', e);
     res.status(400).json({ ok: false, error: e.message });
   }
 });
 
 router.put('/flows/:id', (req, res) => {
-  const data = {};
-  for (const f of flowFields) if (f in req.body) data[f] = req.body[f];
-  if (Object.keys(data).length === 0) return res.json({ ok: true });
-  data.updated_at = Date.now();
-  const sets = Object.keys(data).map(k => `${k} = @${k}`).join(', ');
-  data.id = req.params.id;
   try {
+    const data = coerceBody(req.body, { partial: true });
+    if (Object.keys(data).length === 0) return res.json({ ok: true });
+    data.updated_at = Date.now();
+    const sets = Object.keys(data).map(k => `${k} = @${k}`).join(', ');
+    data.id = parseInt(req.params.id, 10);
     db.prepare(`UPDATE flows SET ${sets} WHERE id = @id`).run(data);
     res.json({ ok: true });
   } catch (e) {
+    console.error('PUT /flows error:', e);
     res.status(400).json({ ok: false, error: e.message });
   }
 });
@@ -92,7 +168,7 @@ router.post('/flows/:id/duplicate', (req, res) => {
   if (!row) return res.status(404).json({ ok: false });
   delete row.id;
   row.slug = nanoid(8).toLowerCase();
-  row.name = row.name + ' (copy)';
+  row.name = (row.name || 'Flow') + ' (copy)';
   row.domain = '';
   row.created_at = Date.now();
   row.updated_at = Date.now();
@@ -165,7 +241,7 @@ router.get('/stats/countries', (req, res) => {
 router.get('/visits', (req, res) => {
   const limit = Math.min(parseInt(req.query.limit || '100', 10), 500);
   const flowId = req.query.flow_id ? parseInt(req.query.flow_id, 10) : null;
-  const decision = req.query.decision; // 'money'|'safe'|null
+  const decision = req.query.decision;
   const params = [];
   let where = '1=1';
   if (flowId) { where += ' AND v.flow_id = ?'; params.push(flowId); }
