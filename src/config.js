@@ -2,7 +2,6 @@
 
 const path = require('path');
 
-// Load .env if present (tiny parser, no dep)
 try {
   const fs = require('fs');
   const envPath = path.join(__dirname, '..', '.env');
@@ -18,6 +17,6 @@ try {
 module.exports = {
   port: parseInt(process.env.PORT || '3000', 10),
   adminToken: process.env.ADMIN_TOKEN || 'admin',
-  dbPath: process.env.DB_PATH || path.join(__dirname, '..', 'data', 'adtrack.db'),
+  dbPath: process.env.DB_PATH || path.join(__dirname, '..', 'data', 'cloakly.db'),
   trustProxy: process.env.TRUST_PROXY !== '0',
 };

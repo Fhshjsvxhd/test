@@ -1,13 +1,12 @@
 {
-  "name": "adtrack",
-  "version": "1.0.0",
-  "description": "Modern ad tracker with built-in cloaker, landing pages and dashboard",
+  "name": "cloakly",
+  "version": "2.0.0",
+  "description": "Self-hosted traffic cloaker with visual flow builder",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "seed": "node src/db/seed.js"
+    "dev": "node --watch src/server.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.3.0",
