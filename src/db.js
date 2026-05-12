@@ -13,48 +13,38 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 db.exec(`
-CREATE TABLE IF NOT EXISTS flows (
+CREATE TABLE IF NOT EXISTS campaigns (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   slug            TEXT NOT NULL UNIQUE,
+  api_key         TEXT NOT NULL UNIQUE,
   name            TEXT NOT NULL,
-  domain          TEXT DEFAULT '',
+  tag             TEXT DEFAULT '',
   status          TEXT DEFAULT 'active',
 
-  -- destinations
-  safe_mode       TEXT DEFAULT 'url',     -- url | html
-  safe_url        TEXT DEFAULT '',        -- external safe site to 302 to (or iframe)
-  safe_html       TEXT DEFAULT '',        -- inline HTML returned to bots
-  money_mode      TEXT DEFAULT 'url',     -- url | html
-  money_url       TEXT DEFAULT '',        -- offer URL (supports macros)
-  money_html      TEXT DEFAULT '',        -- inline HTML for real users
+  -- targets
+  target_url      TEXT DEFAULT '',    -- money page URL
+  target_mode     TEXT DEFAULT 'redirect',  -- redirect | frame | include
+  bot_url         TEXT DEFAULT '',    -- safe page (URL or local filename)
 
-  -- filters (all human-friendly booleans and JSON arrays)
-  block_bots      INTEGER DEFAULT 1,
-  block_datacenter INTEGER DEFAULT 1,
-  block_vpn_proxy INTEGER DEFAULT 1,
-  block_headless  INTEGER DEFAULT 1,
-  require_js      INTEGER DEFAULT 0,
-  require_referrer INTEGER DEFAULT 0,
-  block_empty_ua  INTEGER DEFAULT 1,
-  block_no_lang   INTEGER DEFAULT 1,
+  -- behaviour
+  track_params        INTEGER DEFAULT 1,  -- pass GET params to target
+  disable_extra_bl    INTEGER DEFAULT 0,  -- disable extra vpn/proxy blacklists
+  allow_pr_chrome     INTEGER DEFAULT 0,  -- allow protected/restricted chrome (PR Chrome)
+  conversion_param    TEXT DEFAULT 'clickid',
 
-  countries_mode  TEXT DEFAULT 'any',     -- any | allow | block
-  countries       TEXT DEFAULT '[]',      -- ["US","CA"]
-  devices         TEXT DEFAULT '[]',      -- [] = any, else subset of [mobile,desktop,tablet]
-  os_list         TEXT DEFAULT '[]',      -- [] = any, else subset
-  browsers        TEXT DEFAULT '[]',      -- [] = any
-  languages       TEXT DEFAULT '[]',      -- [] = any, else ["en","ru"]
+  -- filters
+  block_bots          INTEGER DEFAULT 1,
+  block_datacenter    INTEGER DEFAULT 1,
+  block_vpn_proxy     INTEGER DEFAULT 1,
+  block_headless      INTEGER DEFAULT 1,
+  block_empty_ua      INTEGER DEFAULT 1,
+  block_no_lang       INTEGER DEFAULT 1,
+  require_referrer    INTEGER DEFAULT 0,
 
-  blacklist_ips   TEXT DEFAULT '',        -- newline-separated
-  blacklist_ua    TEXT DEFAULT '',        -- newline-separated substrings
-
-  schedule_enabled INTEGER DEFAULT 0,
-  schedule_days    TEXT DEFAULT '[1,2,3,4,5,6,7]',
-  schedule_from    TEXT DEFAULT '00:00',
-  schedule_to      TEXT DEFAULT '23:59',
-
-  limit_clicks_per_ip INTEGER DEFAULT 0,  -- 0 = unlimited
-  limit_window_min    INTEGER DEFAULT 60,
+  -- targeting
+  geo                 TEXT DEFAULT '[]',  -- JSON array of country codes (empty = any)
+  geo_mode            TEXT DEFAULT 'allow', -- allow | block
+  language            TEXT DEFAULT '',    -- single lang like 'en' or empty
 
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL
@@ -62,7 +52,7 @@ CREATE TABLE IF NOT EXISTS flows (
 
 CREATE TABLE IF NOT EXISTS visits (
   id          TEXT PRIMARY KEY,
-  flow_id     INTEGER NOT NULL,
+  campaign_id INTEGER NOT NULL,
   ts          INTEGER NOT NULL,
   ip          TEXT,
   country     TEXT,
@@ -73,26 +63,43 @@ CREATE TABLE IF NOT EXISTS visits (
   language    TEXT,
   referrer    TEXT,
   decision    TEXT,   -- 'money' or 'safe'
-  reason      TEXT,   -- why blocked (if safe)
-  js_verified INTEGER DEFAULT 0,
-  FOREIGN KEY(flow_id) REFERENCES flows(id) ON DELETE CASCADE
+  reason      TEXT,
+  click_subid TEXT,   -- value of the conversion_param from URL
+  FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
 );
-CREATE INDEX IF NOT EXISTS idx_visits_flow_ts ON visits(flow_id, ts);
+CREATE INDEX IF NOT EXISTS idx_visits_camp_ts ON visits(campaign_id, ts);
 CREATE INDEX IF NOT EXISTS idx_visits_ts ON visits(ts);
-CREATE INDEX IF NOT EXISTS idx_visits_ip ON visits(ip);
+
+CREATE TABLE IF NOT EXISTS conversions (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  click_id    TEXT,
+  campaign_id INTEGER,
+  ts          INTEGER NOT NULL,
+  payout      REAL DEFAULT 0,
+  status      TEXT DEFAULT 'approved',
+  tx_id       TEXT,
+  raw         TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_conv_ts ON conversions(ts);
+CREATE INDEX IF NOT EXISTS idx_conv_click ON conversions(click_id);
+
+CREATE TABLE IF NOT EXISTS blacklist (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind        TEXT NOT NULL,    -- 'ip' | 'ua'
+  value       TEXT NOT NULL,
+  note        TEXT DEFAULT '',
+  created_at  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_bl_kind ON blacklist(kind);
 `);
 
-// migration: older installs may not have these columns
-function hasCol(t, c) { return db.prepare(`PRAGMA table_info(${t})`).all().some(x => x.name === c); }
-if (!hasCol('flows', 'domain')) db.exec(`ALTER TABLE flows ADD COLUMN domain TEXT DEFAULT ''`);
-
-// one-time cleanup of IPv4-mapped IPv6 prefixes that older versions stored
+// Drop the old "flows" tables if they existed from an earlier version so
+// the new schema is the single source of truth. Keep data-bearing tables,
+// not schema-only ones.
 try {
-  const info = db.prepare(
-    `UPDATE visits SET ip = substr(ip, 8) WHERE ip LIKE '::ffff:%'`
-  ).run();
-  if (info && info.changes > 0) {
-    console.log(`[migration] cleaned ::ffff: prefix from ${info.changes} visit rows`);
+  const t = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='flows'`).get();
+  if (t) {
+    db.exec(`DROP TABLE IF EXISTS flows`);
   }
 } catch (_) {}
 
