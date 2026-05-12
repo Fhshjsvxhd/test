@@ -50,6 +50,13 @@ if (tableExists('campaigns') && !hasCol('campaigns', 'api_key')) {
   try { db.exec('DROP TABLE campaigns'); } catch (e) { console.warn('drop campaigns:', e.message); }
 }
 
+// Add the Palladium-style credential columns if missing.
+if (tableExists('campaigns')) {
+  if (!hasCol('campaigns', 'client_id'))      db.exec(`ALTER TABLE campaigns ADD COLUMN client_id TEXT DEFAULT ''`);
+  if (!hasCol('campaigns', 'client_company')) db.exec(`ALTER TABLE campaigns ADD COLUMN client_company TEXT DEFAULT ''`);
+  if (!hasCol('campaigns', 'client_secret'))  db.exec(`ALTER TABLE campaigns ADD COLUMN client_secret TEXT DEFAULT ''`);
+}
+
 db.exec(`
 CREATE TABLE IF NOT EXISTS campaigns (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,

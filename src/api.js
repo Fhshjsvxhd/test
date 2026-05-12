@@ -98,6 +98,16 @@ router.post('/campaigns', (req, res) => {
 
     data.slug = nanoid(8).toLowerCase();
     data.api_key = nanoid(32);
+
+    // Palladium-style credentials baked into the generated PHP so
+    // marketing-net fingerprints can't tell the script apart from the
+    // real thing by payload shape.
+    const rnd = () => nanoid(20);
+    data.client_id      = String(Math.floor(1000 + Math.random() * 9000));
+    data.client_company = rnd();
+    const raw = data.client_id + data.client_company + rnd() + Date.now().toString(16);
+    data.client_secret  = Buffer.from(raw).toString('base64');
+
     data.created_at = Date.now();
     data.updated_at = Date.now();
 

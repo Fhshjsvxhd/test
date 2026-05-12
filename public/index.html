@@ -3,106 +3,156 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Traffic filter — self-hosted</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Traffic Filter</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#070910;--ink:#e5e9f0;--sub:#94a3b8;--brand:#818cf8;--line:rgba(255,255,255,.08)}
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-  a{color:inherit;text-decoration:none}
-  .bg-grid{position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 600px at 70% -10%,rgba(99,102,241,.18),transparent 60%),radial-gradient(800px 500px at -10% 40%,rgba(16,185,129,.10),transparent 60%)}
-  .card{background:rgba(17,22,38,.5);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(8px)}
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:11px 20px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:all .15s;border:1px solid transparent}
-  .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 6px 20px -6px rgba(99,102,241,.5)}
-  .btn-primary:hover{transform:translateY(-1px)}
-  .btn-outline{background:rgba(255,255,255,.05);color:#fff;border-color:rgba(255,255,255,.12)}
-  .btn-outline:hover{background:rgba(255,255,255,.1)}
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;color:var(--sub);font-size:12px;font-weight:500}
-  .grad-text{background:linear-gradient(135deg,#818cf8 0%,#34d399 60%,#fbbf24 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  :root { --bg:#0a0e17; --ink:#e5e9f0; --sub:#8a93a6; --brand:#818cf8; --line:rgba(255,255,255,.08); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 28px 0; display: flex; justify-content: space-between; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+  .dot { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+
+  .lang { display: flex; gap: 6px; }
+  .lang button, .btn {
+    border: 1px solid var(--line); background: transparent; color: var(--sub);
+    padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: all .15s; font-family: inherit;
+  }
+  .lang button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .btn:hover { color: var(--ink); border-color: rgba(255,255,255,.2); }
+
+  .cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px; border-radius: 9px;
+    background: var(--brand); color: #fff;
+    font-weight: 600; font-size: 14px; text-decoration: none;
+    transition: opacity .15s;
+  }
+  .cta:hover { opacity: .9; }
+
+  main { padding: 80px 0 60px; }
+
+  h1 {
+    font-size: 44px; font-weight: 800; letter-spacing: -.02em;
+    line-height: 1.1; max-width: 620px;
+  }
+  h1 .fade { color: var(--sub); }
+
+  .lead {
+    margin-top: 18px; font-size: 16px; line-height: 1.65;
+    color: var(--sub); max-width: 540px;
+  }
+
+  .actions { margin-top: 30px; display: flex; gap: 10px; align-items: center; }
+
+  .steps {
+    margin-top: 80px; display: grid; gap: 14px;
+  }
+  @media(min-width: 720px){ .steps { grid-template-columns: repeat(3, 1fr); } }
+  .step {
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255,255,255,.02);
+  }
+  .step .n { font-size: 12px; font-weight: 600; color: var(--brand); letter-spacing: .1em; }
+  .step .t { margin-top: 8px; font-weight: 600; font-size: 15px; }
+  .step .d { margin-top: 6px; font-size: 13px; color: var(--sub); line-height: 1.55; }
+
+  footer {
+    margin-top: 80px; padding: 24px 0; border-top: 1px solid var(--line);
+    color: var(--sub); font-size: 12px;
+    display: flex; justify-content: space-between;
+  }
+
   [data-lang]{display:none}
-  html[lang="en"] [data-lang="en"]{display:initial}
-  html[lang="ru"] [data-lang="ru"]{display:initial}
+  html[lang="en"] [data-lang="en"]{display:inline}
+  html[lang="ru"] [data-lang="ru"]{display:inline}
 </style>
 </head>
 <body>
-<div class="bg-grid"></div>
+<div class="wrap">
 
-<nav class="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
-  <div class="flex items-center gap-3">
-    <div class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">◆</div>
-    <div class="font-bold">Traffic Filter</div>
+<header>
+  <div class="brand">
+    <div class="dot"></div>
+    <span>Traffic Filter</span>
   </div>
-  <div class="flex gap-2 items-center">
-    <button class="chip cursor-pointer" id="lang-en">EN</button>
-    <button class="chip cursor-pointer" id="lang-ru">RU</button>
-    <a href="/admin" class="btn btn-primary ml-3" data-lang="en">Open dashboard</a>
-    <a href="/admin" class="btn btn-primary ml-3" data-lang="ru">Открыть панель</a>
+  <div class="lang">
+    <button id="lang-en">EN</button>
+    <button id="lang-ru">RU</button>
+    <a href="/admin" class="btn"><span data-lang="en">Sign in</span><span data-lang="ru">Войти</span></a>
   </div>
-</nav>
+</header>
 
-<section class="max-w-4xl mx-auto px-6 pt-12 pb-20 text-center">
-  <span class="chip">
-    <span class="w-2 h-2 rounded-full" style="background:#34d399"></span>
-    <span data-lang="en">Self-hosted · Open source · MIT</span>
-    <span data-lang="ru">Self-hosted · Open source · MIT</span>
-  </span>
-
-  <h1 class="text-5xl md:text-6xl font-black mt-8 leading-[1.05] tracking-tight">
-    <span data-lang="en">One link, <span class="grad-text">right visitors.</span></span>
-    <span data-lang="ru">Одна ссылка, <span class="grad-text">правильные посетители.</span></span>
+<main>
+  <h1>
+    <span data-lang="en">One link.<br><span class="fade">Right visitors.</span></span>
+    <span data-lang="ru">Одна ссылка.<br><span class="fade">Правильные посетители.</span></span>
   </h1>
 
-  <p class="text-lg mt-6 max-w-2xl mx-auto" style="color:var(--sub)">
-    <span data-lang="en">Create a campaign, download a small PHP file, put it on your own hosting. Real humans go to your offer, bots and moderators see the safe page.</span>
-    <span data-lang="ru">Создаёте кампанию, скачиваете маленький PHP-файл, кладёте на свой хостинг. Живые люди идут на оффер, боты и модераторы — на белую страницу.</span>
+  <p class="lead">
+    <span data-lang="en">Create a campaign in the dashboard, download a small PHP file, put it on your own hosting. Real humans reach your offer, bots and moderators see a safe page.</span>
+    <span data-lang="ru">Создаёте кампанию в панели, скачиваете маленький PHP-файл, кладёте на свой хостинг. Живые люди попадают на оффер, боты и модераторы видят безопасную страницу.</span>
   </p>
 
-  <div class="mt-9 flex items-center justify-center gap-3 flex-wrap">
-    <a href="/admin" class="btn btn-primary">
-      <span data-lang="en">Open dashboard</span>
-      <span data-lang="ru">Открыть панель</span>
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+  <div class="actions">
+    <a href="/admin" class="cta">
+      <span data-lang="en">Open dashboard →</span>
+      <span data-lang="ru">Открыть панель →</span>
     </a>
   </div>
 
-  <div class="grid grid-cols-3 gap-4 mt-16 max-w-2xl mx-auto">
-    <div class="card p-5">
-      <div class="text-3xl font-bold grad-text">1</div>
-      <div class="text-sm mt-2" style="color:var(--sub)">
-        <span data-lang="en">Create a campaign in the dashboard</span>
-        <span data-lang="ru">Создайте кампанию в панели</span>
+  <div class="steps">
+    <div class="step">
+      <div class="n">01</div>
+      <div class="t"><span data-lang="en">Create a campaign</span><span data-lang="ru">Создайте кампанию</span></div>
+      <div class="d">
+        <span data-lang="en">Target URL, bot URL, filters. Save.</span>
+        <span data-lang="ru">Целевой URL, бот-URL, фильтры. Сохранить.</span>
       </div>
     </div>
-    <div class="card p-5">
-      <div class="text-3xl font-bold grad-text">2</div>
-      <div class="text-sm mt-2" style="color:var(--sub)">
-        <span data-lang="en">Download the file and upload it to your hosting</span>
-        <span data-lang="ru">Скачайте файл и загрузите на свой хостинг</span>
+    <div class="step">
+      <div class="n">02</div>
+      <div class="t"><span data-lang="en">Download the file</span><span data-lang="ru">Скачайте файл</span></div>
+      <div class="d">
+        <span data-lang="en">Upload cloak.php and a bot page to your hosting.</span>
+        <span data-lang="ru">Загрузите cloak.php и bot-страницу на свой хостинг.</span>
       </div>
     </div>
-    <div class="card p-5">
-      <div class="text-3xl font-bold grad-text">3</div>
-      <div class="text-sm mt-2" style="color:var(--sub)">
-        <span data-lang="en">Point your ads to your domain — traffic is filtered</span>
-        <span data-lang="ru">Льёте рекламу на свой домен — трафик фильтруется</span>
+    <div class="step">
+      <div class="n">03</div>
+      <div class="t"><span data-lang="en">Run your ads</span><span data-lang="ru">Запустите рекламу</span></div>
+      <div class="d">
+        <span data-lang="en">Point the ad URL to your file — traffic is filtered.</span>
+        <span data-lang="ru">Ставьте ссылку на ваш файл в рекламу — трафик фильтруется.</span>
       </div>
     </div>
   </div>
-</section>
+</main>
 
-<footer class="border-t" style="border-color:var(--line)">
-  <div class="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between text-sm" style="color:var(--sub)">
-    <div>Traffic Filter · MIT License</div>
-    <a href="/admin" class="hover:text-white">Dashboard →</a>
-  </div>
+<footer>
+  <div>© Traffic Filter · MIT</div>
+  <a href="/admin" class="btn">Dashboard →</a>
 </footer>
 
+</div>
+
 <script>
-  function setLang(l){document.documentElement.setAttribute('lang',l);localStorage.setItem('cl_lang',l);document.querySelectorAll('#lang-en,#lang-ru').forEach(b=>b.style.background='');const el=document.getElementById('lang-'+l);if(el)el.style.background='rgba(99,102,241,.25)';}
-  setLang(localStorage.getItem('cl_lang')||(navigator.language.startsWith('ru')?'ru':'en'));
-  document.getElementById('lang-en').onclick=()=>setLang('en');
-  document.getElementById('lang-ru').onclick=()=>setLang('ru');
+  function setLang(l){
+    document.documentElement.setAttribute('lang', l);
+    localStorage.setItem('cl_lang', l);
+    document.querySelectorAll('.lang button').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById('lang-'+l);
+    if (el) el.classList.add('active');
+  }
+  setLang(localStorage.getItem('cl_lang') || (navigator.language.startsWith('ru') ? 'ru' : 'en'));
+  document.getElementById('lang-en').onclick = () => setLang('en');
+  document.getElementById('lang-ru').onclick = () => setLang('ru');
 </script>
 </body>
 </html>
