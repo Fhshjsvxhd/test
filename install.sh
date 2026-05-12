@@ -66,12 +66,26 @@ fi
 
 # ---------- clone / update repo ----------
 step "Installing AdTrack into $INSTALL_DIR"
-if [ -d "$INSTALL_DIR/.git" ]; then
+
+# If the script is being run from an already-cloned directory (e.g. private repo
+# cloned manually), use that directory as the source rather than re-cloning.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/package.json" ] && [ -d "$SCRIPT_DIR/src" ]; then
+  if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
+    mkdir -p "$INSTALL_DIR"
+    cp -a "$SCRIPT_DIR/." "$INSTALL_DIR/"
+  fi
+  ok "Using local source from $SCRIPT_DIR"
+elif [ -d "$INSTALL_DIR/.git" ]; then
   git -C "$INSTALL_DIR" fetch --all
   git -C "$INSTALL_DIR" reset --hard "origin/$BRANCH"
 else
   mkdir -p "$INSTALL_DIR"
-  git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$INSTALL_DIR"
+  if ! git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$INSTALL_DIR" 2>/dev/null; then
+    die "Failed to clone $REPO_URL. If this is a private repo, clone it manually first:
+  sudo git clone https://TOKEN@github.com/OWNER/REPO.git $INSTALL_DIR
+  sudo bash $INSTALL_DIR/install.sh"
+  fi
 fi
 chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 

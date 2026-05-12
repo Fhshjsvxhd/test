@@ -34,13 +34,29 @@ A modern, self-hosted ad tracker with a built-in cloaker, landing-page engine an
 
 ## Install on VPS in one command
 
-Any fresh Ubuntu 20.04+ / Debian 11+ / Rocky / AlmaLinux server:
+Any fresh Ubuntu 20.04+ / Debian 11+ / Rocky / AlmaLinux server.
+
+**If the repo is public:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Fhshjsvxhd/test/main/install.sh | sudo bash
 ```
 
-That's it. The script will:
+**If the repo is private** (clones with your git credentials; use HTTPS with a PAT or SSH):
+
+```bash
+# option A: HTTPS + token (replace YOUR_TOKEN with a GitHub fine-grained PAT that can read the repo)
+sudo apt-get install -y git && \
+  sudo git clone https://YOUR_TOKEN@github.com/Fhshjsvxhd/test.git /opt/adtrack && \
+  sudo bash /opt/adtrack/install.sh
+
+# option B: SSH (your ~/.ssh key must be authorized on GitHub)
+sudo apt-get install -y git && \
+  sudo git clone git@github.com:Fhshjsvxhd/test.git /opt/adtrack && \
+  sudo bash /opt/adtrack/install.sh
+```
+
+The script will:
 - Install Node.js 20, PM2, sqlite3 and build tools
 - Create a system user `adtrack`
 - Clone the repo into `/opt/adtrack`
