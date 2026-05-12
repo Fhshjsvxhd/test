@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AdTrack - Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg:     '#0b0f17',
+          panel:  '#121826',
+          soft:   '#1a2233',
+          edge:   '#232b3d',
+          text:   '#e5e9f0',
+          muted:  '#8a93a6',
+          brand:  '#4f8cff',
+          green:  '#22c55e',
+          red:    '#ef4444',
+          amber:  '#f59e0b',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html,body{background:#0b0f17;color:#e5e9f0}
+  .card{background:#121826;border:1px solid #232b3d;border-radius:14px}
+  .btn{background:#4f8cff;color:#fff;padding:8px 14px;border-radius:8px;font-weight:500}
+  .btn:hover{filter:brightness(1.1)}
+  .btn-ghost{background:#1a2233;color:#e5e9f0}
+  .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500}
+  .chip-ok{background:rgba(34,197,94,.15);color:#22c55e}
+  .chip-bad{background:rgba(239,68,68,.15);color:#ef4444}
+  .chip-warn{background:rgba(245,158,11,.15);color:#f59e0b}
+  .chip-muted{background:rgba(138,147,166,.15);color:#8a93a6}
+  input,select,textarea{background:#0b0f17;border:1px solid #232b3d;color:#e5e9f0;border-radius:8px;padding:8px 10px;font-size:14px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#4f8cff}
+  th{text-align:left;font-weight:500;color:#8a93a6;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px}
+  td{padding:10px;border-top:1px solid #232b3d;font-size:14px}
+  tr:hover td{background:rgba(79,140,255,.04)}
+  .tab{padding:8px 14px;border-radius:8px;cursor:pointer;color:#8a93a6;font-size:14px;font-weight:500}
+  .tab.active{background:#1a2233;color:#e5e9f0}
+  .modal-bg{background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+  .scroll-thin::-webkit-scrollbar{width:8px;height:8px}
+  .scroll-thin::-webkit-scrollbar-thumb{background:#232b3d;border-radius:4px}
+</style>
+</head>
+<body x-data="app()" x-init="init()" class="min-h-screen">
+
+<!-- login -->
+<div x-show="!authed" class="min-h-screen flex items-center justify-center p-6">
+  <div class="card p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-1">AdTrack</h1>
+    <p class="text-muted text-sm mb-6">Enter your admin token to continue.</p>
+    <input type="password" x-model="tokenInput" placeholder="Admin token" @keydown.enter="login()" class="mb-3">
+    <button class="btn w-full" @click="login()">Sign in</button>
+    <p class="text-xs text-muted mt-4">Default is <code class="bg-soft px-1 rounded">admin</code> — change <code>ADMIN_TOKEN</code> in .env for production.</p>
+  </div>
+</div>
+
+<!-- app -->
+<div x-show="authed" x-cloak>
+
+<!-- header -->
+<header class="border-b border-edge bg-panel">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-brand flex items-center justify-center font-bold">A</div>
+      <div>
+        <div class="font-semibold">AdTrack</div>
+        <div class="text-xs text-muted">Tracker + Cloaker</div>
+      </div>
+    </div>
+    <nav class="flex gap-1">
+      <div class="tab" :class="tab==='dashboard' && 'active'" @click="tab='dashboard'">Dashboard</div>
+      <div class="tab" :class="tab==='campaigns' && 'active'" @click="tab='campaigns';loadList('campaigns')">Campaigns</div>
+      <div class="tab" :class="tab==='offers' && 'active'" @click="tab='offers';loadList('offers')">Offers</div>
+      <div class="tab" :class="tab==='landings' && 'active'" @click="tab='landings';loadList('landings')">Landings</div>
+      <div class="tab" :class="tab==='cloaker' && 'active'" @click="tab='cloaker';loadList('cloaker-rules')">Cloaker</div>
+    </nav>
+    <div class="flex items-center gap-2">
+      <select x-model.number="rangeHours" @change="refresh()" class="w-32">
+        <option value="1">Last 1h</option>
+        <option value="24">Last 24h</option>
+        <option value="168">Last 7d</option>
+        <option value="720">Last 30d</option>
+      </select>
+      <button class="btn-ghost px-3 py-2 rounded-lg text-sm" @click="logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-6">
+
+  <!-- DASHBOARD -->
+  <section x-show="tab==='dashboard'">
+    <!-- KPI cards -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <template x-for="k in kpis" :key="k.label">
+        <div class="card p-4">
+          <div class="text-xs text-muted uppercase tracking-wider" x-text="k.label"></div>
+          <div class="text-2xl font-bold mt-1" :class="k.color" x-text="k.value"></div>
+          <div class="text-xs text-muted mt-1" x-text="k.hint"></div>
+        </div>
+      </template>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <!-- Timeline chart -->
+      <div class="card p-4 lg:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+          <div class="font-semibold">Traffic timeline</div>
+          <div class="text-xs text-muted">clicks vs cloaked, hourly</div>
+        </div>
+        <div class="relative h-52" x-ref="chart"></div>
+      </div>
+      <!-- Top campaigns -->
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="font-semibold">Top campaigns</div>
+        </div>
+        <div class="space-y-2 max-h-52 overflow-auto scroll-thin">
+          <template x-for="c in campaignStats.slice(0,8)" :key="c.id">
+            <div class="flex items-center justify-between py-1">
+              <div>
+                <div class="text-sm font-medium" x-text="c.name"></div>
+                <div class="text-xs text-muted"><span x-text="c.clicks"></span> clicks &middot; <span x-text="c.conversions"></span> conv</div>
+              </div>
+              <div class="text-sm font-semibold" :class="(c.revenue - c.cost) >= 0 ? 'text-green' : 'text-red'"
+                   x-text="'$'+(c.revenue - c.cost).toFixed(2)"></div>
+            </div>
+          </template>
+          <div x-show="campaignStats.length===0" class="text-sm text-muted">No data yet. Send a click to <code class="bg-soft px-1 rounded">/t/demo</code></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time feed -->
+    <div class="card p-0 overflow-hidden">
+      <div class="flex items-center justify-between p-4 border-b border-edge">
+        <div class="font-semibold">Real-time clicks</div>
+        <div class="flex items-center gap-2 text-xs text-muted">
+          <span class="w-2 h-2 rounded-full bg-green animate-pulse"></span> live
+        </div>
+      </div>
+      <div class="overflow-x-auto scroll-thin max-h-96">
+        <table class="w-full">
+          <thead class="sticky top-0 bg-panel">
+            <tr>
+              <th>Time</th><th>Campaign</th><th>IP</th><th>Geo</th>
+              <th>Device</th><th>Browser</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="r in recentClicks" :key="r.id">
+              <tr>
+                <td class="text-muted" x-text="fmtTime(r.ts)"></td>
+                <td x-text="r.campaign_name"></td>
+                <td class="font-mono text-xs" x-text="r.ip"></td>
+                <td x-text="r.country || '-'"></td>
+                <td x-text="r.device || '-'"></td>
+                <td x-text="r.browser || '-'"></td>
+                <td>
+                  <span x-show="r.cloaked" class="chip chip-bad" x-text="'cloaked: '+r.cloak_reason"></span>
+                  <span x-show="!r.cloaked" class="chip chip-ok">passed</span>
+                </td>
+              </tr>
+            </template>
+            <tr x-show="recentClicks.length===0"><td colspan="7" class="text-center text-muted py-8">No clicks yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIST TABS -->
+  <section x-show="tab!=='dashboard'">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold capitalize" x-text="tab.replace('-',' ')"></h2>
+      <button class="btn" @click="openEditor(null)">+ New</button>
+    </div>
+
+    <div class="card overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr>
+            <template x-for="col in listColumns()" :key="col">
+              <th x-text="col"></th>
+            </template>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="row in list" :key="row.id">
+            <tr>
+              <template x-for="col in listColumns()" :key="col">
+                <td x-text="formatCell(row, col)"></td>
+              </template>
+              <td class="text-right">
+                <button class="btn-ghost px-3 py-1 rounded text-sm mr-2" @click="openEditor(row)">Edit</button>
+                <button class="text-red text-sm" @click="deleteRow(row.id)">Delete</button>
+              </td>
+            </tr>
+          </template>
+          <tr x-show="list.length===0"><td colspan="10" class="text-center text-muted py-8">Nothing here yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- Editor modal -->
+<div x-show="editor.open" x-cloak class="fixed inset-0 modal-bg flex items-start justify-center overflow-auto py-10 px-4 z-50">
+  <div class="card p-6 w-full max-w-2xl">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold" x-text="editor.row?.id ? 'Edit' : 'Create'"></h3>
+      <button class="text-muted" @click="editor.open=false">Close</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <template x-for="f in editorFields()" :key="f.name">
+        <div :class="f.full && 'md:col-span-2'">
+          <label class="text-xs text-muted block mb-1" x-text="f.label"></label>
+          <template x-if="f.type==='textarea'">
+            <textarea x-model="editor.row[f.name]" rows="3"></textarea>
+          </template>
+          <template x-if="f.type==='select'">
+            <select x-model="editor.row[f.name]">
+              <template x-for="o in f.options" :key="o.value"><option :value="o.value" x-text="o.label"></option></template>
+            </select>
+          </template>
+          <template x-if="!f.type || f.type==='text' || f.type==='number'">
+            <input :type="f.type||'text'" x-model="editor.row[f.name]">
+          </template>
+        </div>
+      </template>
+    </div>
+    <div class="mt-6 flex justify-end gap-2">
+      <button class="btn-ghost px-4 py-2 rounded-lg" @click="editor.open=false">Cancel</button>
+      <button class="btn" @click="saveRow()">Save</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function app() {
+  return {
+    authed: false,
+    token: '',
+    tokenInput: 'admin',
+    tab: 'dashboard',
+    rangeHours: 24,
+
+    // dashboard
+    overview: {},
+    timeline: [],
+    campaignStats: [],
+    recentClicks: [],
+    timer: null,
+
+    // list tabs
+    list: [],
+    campaignsCache: [],
+    offersCache: [],
+    landingsCache: [],
+    rulesCache: [],
+
+    // editor
+    editor: { open: false, row: {}, type: null },
+
+    init() {
+      const t = localStorage.getItem('adtrack_token');
+      if (t) { this.token = t; this.authed = true; this.refresh(); this.startPolling(); }
+    },
+    login() {
+      this.token = this.tokenInput.trim();
+      this.authed = true;
+      localStorage.setItem('adtrack_token', this.token);
+      this.refresh(); this.startPolling();
+    },
+    logout() {
+      localStorage.removeItem('adtrack_token');
+      this.authed = false; this.token = '';
+      if (this.timer) clearInterval(this.timer);
+    },
+
+    startPolling() {
+      if (this.timer) clearInterval(this.timer);
+      this.timer = setInterval(() => this.refresh(), 5000);
+    },
+
+    async api(path, opts = {}) {
+      const res = await fetch('/api' + path, {
+        ...opts,
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': this.token, ...(opts.headers||{}) }
+      });
+      if (res.status === 401) { this.logout(); return { ok:false }; }
+      return res.json();
+    },
+
+    async refresh() {
+      if (!this.authed) return;
+      const since = Date.now() - this.rangeHours * 3600 * 1000;
+      const [ov, tl, cs, rc] = await Promise.all([
+        this.api('/stats/overview?since=' + since),
+        this.api('/stats/timeline?hours=' + this.rangeHours),
+        this.api('/stats/campaigns?since=' + since),
+        this.api('/clicks/recent?limit=50'),
+      ]);
+      this.overview = ov;
+      this.timeline = tl.buckets || [];
+      this.campaignStats = cs.rows || [];
+      this.recentClicks = rc.rows || [];
+      this.$nextTick(() => this.drawChart());
+    },
+
+    get kpis() {
+      const o = this.overview;
+      return [
+        { label: 'Clicks',     value: o.clicks || 0,          hint: (o.real||0)+' real', color: '' },
+        { label: 'Cloaked',    value: o.cloaked || 0,         hint: (o.bots||0)+' bots', color: 'text-amber' },
+        { label: 'Conversions',value: o.conversions || 0,     hint: 'CR '+(o.cr||0)+'%', color: 'text-green' },
+        { label: 'Revenue',    value: '$'+(o.revenue||0),     hint: '-$'+(o.cost||0)+' cost', color: 'text-green' },
+        { label: 'Profit',     value: '$'+(o.profit||0),      hint: 'ROI '+(o.roi||0)+'%', color: (o.profit||0) >= 0 ? 'text-green' : 'text-red' },
+      ];
+    },
+
+    drawChart() {
+      const el = this.$refs.chart;
+      if (!el) return;
+      const w = el.clientWidth, h = el.clientHeight;
+      const data = this.timeline;
+      if (data.length === 0) {
+        el.innerHTML = '<div class="text-sm text-muted flex items-center justify-center h-full">No traffic yet</div>';
+        return;
+      }
+      const max = Math.max(1, ...data.map(d => d.clicks));
+      const bw = w / data.length;
+      const toY = v => h - 20 - (v / max) * (h - 30);
+      let bars = '';
+      data.forEach((d, i) => {
+        const x = i * bw + 2;
+        const cy = toY(d.clicks);
+        const cloakedY = toY(d.cloaked || 0);
+        bars += `<rect x="${x}" y="${cy}" width="${bw-4}" height="${h-20-cy}" fill="#4f8cff" opacity="0.85" rx="2"/>`;
+        bars += `<rect x="${x}" y="${cloakedY}" width="${bw-4}" height="${h-20-cloakedY}" fill="#f59e0b" opacity="0.6" rx="2"/>`;
+      });
+      const labels = data.map((d, i) => {
+        if (i % Math.ceil(data.length/6) !== 0) return '';
+        const dt = new Date(d.bucket);
+        const x = i * bw + bw/2;
+        return `<text x="${x}" y="${h-4}" fill="#8a93a6" font-size="10" text-anchor="middle">${dt.getHours()}:00</text>`;
+      }).join('');
+      el.innerHTML = `<svg width="${w}" height="${h}">${bars}${labels}</svg>`;
+    },
+
+    // --------- list tabs ---------
+    async loadList(type) {
+      this.currentType = type;
+      // preload caches used in selects
+      if (!this.offersCache.length)   this.offersCache   = (await this.api('/offers')).rows || [];
+      if (!this.landingsCache.length) this.landingsCache = (await this.api('/landings')).rows || [];
+      if (!this.rulesCache.length)    this.rulesCache    = (await this.api('/cloaker-rules')).rows || [];
+      const res = await this.api('/' + type);
+      this.list = res.rows || [];
+    },
+
+    listColumns() {
+      switch (this.tab) {
+        case 'campaigns': return ['slug','name','source','status'];
+        case 'offers':    return ['name','url','payout','country'];
+        case 'landings':  return ['name','kind','template'];
+        case 'cloaker':   return ['name','block_countries','block_ua','allow_devices'];
+      }
+      return [];
+    },
+
+    formatCell(row, col) {
+      let v = row[col];
+      if (v == null) return '';
+      if (typeof v === 'string' && v.startsWith('[') && v.endsWith(']')) {
+        try { const arr = JSON.parse(v); return arr.join(', '); } catch {}
+      }
+      return String(v);
+    },
+
+    openEditor(row) {
+      const fresh = row ? { ...row } : this.defaultRow();
+      this.editor = { open: true, row: fresh, type: this.tab };
+    },
+
+    defaultRow() {
+      switch (this.tab) {
+        case 'campaigns': return { slug:'', name:'', source:'', cost_model:'cpc', cost_value:0, status:'active' };
+        case 'offers':    return { name:'', url:'', payout:0, country:'' };
+        case 'landings':  return { name:'', kind:'white', template:'' };
+        case 'cloaker':   return {
+          name:'', allow_countries:'[]', block_countries:'[]', block_ips:'[]',
+          block_asns:'[]', block_ua:'[]', allow_devices:'[]',
+          require_referrer:0, block_vpn:1, block_bots:1, min_js_check:0,
+        };
+      }
+      return {};
+    },
+
+    editorFields() {
+      switch (this.tab) {
+        case 'campaigns': return [
+          {name:'slug',label:'Slug (URL id)'},
+          {name:'name',label:'Name'},
+          {name:'source',label:'Source'},
+          {name:'cost_model',label:'Cost model',type:'select',options:[{value:'cpc',label:'CPC'},{value:'cpm',label:'CPM'},{value:'cpa',label:'CPA'}]},
+          {name:'cost_value',label:'Cost value',type:'number'},
+          {name:'money_offer_id',label:'Offer',type:'select',options:[{value:null,label:'-'},...this.offersCache.map(o=>({value:o.id,label:o.name}))]},
+          {name:'white_landing_id',label:'White page',type:'select',options:[{value:null,label:'-'},...this.landingsCache.filter(l=>l.kind==='white').map(l=>({value:l.id,label:l.name}))]},
+          {name:'prelander_id',label:'Prelander',type:'select',options:[{value:null,label:'-'},...this.landingsCache.filter(l=>l.kind==='prelander').map(l=>({value:l.id,label:l.name}))]},
+          {name:'cloaker_rule_id',label:'Cloaker rule',type:'select',options:[{value:null,label:'-'},...this.rulesCache.map(r=>({value:r.id,label:r.name}))]},
+          {name:'status',label:'Status',type:'select',options:[{value:'active',label:'Active'},{value:'paused',label:'Paused'},{value:'archived',label:'Archived'}]},
+        ];
+        case 'offers': return [
+          {name:'name',label:'Name'},
+          {name:'url',label:'URL (supports {clickid} {sub1}...)',full:true},
+          {name:'payout',label:'Payout',type:'number'},
+          {name:'country',label:'Country code'},
+        ];
+        case 'landings': return [
+          {name:'name',label:'Name'},
+          {name:'kind',label:'Kind',type:'select',options:[{value:'white',label:'White'},{value:'prelander',label:'Prelander'},{value:'money',label:'Money'}]},
+          {name:'template',label:'Template file (under /landings)'},
+        ];
+        case 'cloaker': return [
+          {name:'name',label:'Name',full:true},
+          {name:'allow_countries',label:'Allow countries (JSON array e.g. ["US","CA"])',full:true},
+          {name:'block_countries',label:'Block countries (JSON array)',full:true},
+          {name:'block_ips',label:'Block IPs (JSON)',full:true},
+          {name:'block_asns',label:'Block ASNs (JSON e.g. ["AS15169"])',full:true},
+          {name:'block_ua',label:'Block UA tokens (JSON)',full:true},
+          {name:'allow_devices',label:'Allow devices (JSON e.g. ["mobile"])',full:true},
+          {name:'block_bots',label:'Block bots',type:'select',options:[{value:1,label:'Yes'},{value:0,label:'No'}]},
+          {name:'block_vpn',label:'Block VPN/DC',type:'select',options:[{value:1,label:'Yes'},{value:0,label:'No'}]},
+          {name:'require_referrer',label:'Require referrer',type:'select',options:[{value:1,label:'Yes'},{value:0,label:'No'}]},
+        ];
+      }
+      return [];
+    },
+
+    typePath() {
+      return this.tab === 'cloaker' ? 'cloaker-rules' : this.tab;
+    },
+
+    async saveRow() {
+      const body = { ...this.editor.row };
+      // empty nullables
+      for (const k of Object.keys(body)) if (body[k] === '') body[k] = null;
+      const id = body.id;
+      delete body.id; delete body.created_at;
+      const url = '/' + this.typePath() + (id ? '/' + id : '');
+      await this.api(url, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
+      this.editor.open = false;
+      // invalidate caches so selects refresh
+      this.offersCache = this.landingsCache = this.rulesCache = [];
+      this.loadList(this.typePath());
+    },
+
+    async deleteRow(id) {
+      if (!confirm('Delete this row?')) return;
+      await this.api('/' + this.typePath() + '/' + id, { method: 'DELETE' });
+      this.loadList(this.typePath());
+    },
+
+    fmtTime(ts) {
+      const d = new Date(ts);
+      return d.toLocaleTimeString();
+    }
+  }
+}
+</script>
+
+</body>
+</html>
