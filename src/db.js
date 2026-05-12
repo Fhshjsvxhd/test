@@ -135,4 +135,29 @@ CREATE INDEX IF NOT EXISTS idx_bl_kind ON blacklist(kind);
 
 try { db.pragma('foreign_keys = ON'); } catch (_) {}
 
+// Backfill Palladium-style credentials for any campaign rows created
+// before that feature existed, so their downloaded PHP can authenticate.
+try {
+  const rows = db.prepare(
+    `SELECT id FROM campaigns WHERE client_id IS NULL OR client_id = ''`
+  ).all();
+  if (rows.length > 0) {
+    const update = db.prepare(
+      `UPDATE campaigns SET client_id = ?, client_company = ?, client_secret = ? WHERE id = ?`
+    );
+    const crypto = require('crypto');
+    const rnd = (n) => crypto.randomBytes(n).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, n);
+    for (const r of rows) {
+      const cid = String(1000 + Math.floor(Math.random() * 9000));
+      const cc  = rnd(20);
+      const raw = cid + cc + rnd(20) + Date.now().toString(16);
+      const cs  = Buffer.from(raw).toString('base64');
+      update.run(cid, cc, cs, r.id);
+    }
+    console.log(`[migration] filled credentials on ${rows.length} existing campaign(s)`);
+  }
+} catch (e) {
+  console.warn('[migration] credential backfill:', e.message);
+}
+
 module.exports = { db, nanoid };
