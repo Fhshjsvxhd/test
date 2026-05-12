@@ -86,4 +86,14 @@ CREATE INDEX IF NOT EXISTS idx_visits_ip ON visits(ip);
 function hasCol(t, c) { return db.prepare(`PRAGMA table_info(${t})`).all().some(x => x.name === c); }
 if (!hasCol('flows', 'domain')) db.exec(`ALTER TABLE flows ADD COLUMN domain TEXT DEFAULT ''`);
 
+// one-time cleanup of IPv4-mapped IPv6 prefixes that older versions stored
+try {
+  const info = db.prepare(
+    `UPDATE visits SET ip = substr(ip, 8) WHERE ip LIKE '::ffff:%'`
+  ).run();
+  if (info && info.changes > 0) {
+    console.log(`[migration] cleaned ::ffff: prefix from ${info.changes} visit rows`);
+  }
+} catch (_) {}
+
 module.exports = { db, nanoid };

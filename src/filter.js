@@ -57,7 +57,10 @@ const VPN_ASNS = new Set([
 
 function getIP(req) {
   const xf = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return xf || req.ip || (req.connection && req.connection.remoteAddress) || '';
+  const raw = xf || req.ip || (req.connection && req.connection.remoteAddress) || '';
+  // Strip the IPv4-mapped-IPv6 prefix ::ffff:  so that 193.235.207.157 shows
+  // instead of ::ffff:193.235.207.157. Also normalise lowercase.
+  return raw.replace(/^::ffff:/i, '').trim();
 }
 
 function geo(req) {

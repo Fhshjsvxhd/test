@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,122 +8,149 @@
 <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="/admin/i18n.js"></script>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-      colors: {
-        bg:    '#f7f8fb',
-        ink:   '#0f172a',
-        sub:   '#64748b',
-        line:  '#e2e8f0',
-        soft:  '#f1f5f9',
-        brand: '#6366f1',
-        brand2:'#4f46e5',
-        good:  '#10b981',
-        bad:   '#ef4444',
-        warn:  '#f59e0b',
-      }
-    }
-  }
-}
-</script>
 <style>
-  html,body{background:#f7f8fb;color:#0f172a;font-family:'Inter',system-ui,sans-serif}
-  [x-cloak]{display:none !important}
-
-  .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px}
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;font-weight:500;font-size:14px;transition:all .15s;cursor:pointer;border:1px solid transparent}
-  .btn-primary{background:#6366f1;color:#fff}
-  .btn-primary:hover{background:#4f46e5}
-  .btn-ghost{background:#f1f5f9;color:#0f172a}
-  .btn-ghost:hover{background:#e2e8f0}
-  .btn-outline{background:#fff;color:#0f172a;border-color:#e2e8f0}
-  .btn-outline:hover{background:#f7f8fb}
-  .btn-danger{background:#fef2f2;color:#ef4444}
-  .btn-danger:hover{background:#fee2e2}
-  .btn-icon{padding:8px;border-radius:8px}
-
-  input[type=text],input[type=url],input[type=password],input[type=number],select,textarea{
-    width:100%;background:#fff;border:1px solid #e2e8f0;color:#0f172a;border-radius:10px;padding:10px 12px;font-size:14px;transition:all .15s
+  :root {
+    --bg: #f7f8fb; --surface: #ffffff; --surface-2: #f1f5f9;
+    --ink: #0f172a; --sub: #64748b; --line: #e2e8f0;
+    --brand: #6366f1; --brand-2: #4f46e5;
+    --good: #10b981; --bad: #ef4444; --warn: #f59e0b;
+    --shadow: 0 1px 3px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.03);
   }
-  input:focus,select:focus,textarea:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
-  textarea{font-family:ui-monospace,monospace;min-height:90px}
-  label{font-size:13px;color:#475569;font-weight:500;margin-bottom:6px;display:block}
+  [data-theme=dark] {
+    --bg: #0a0f1c; --surface: #121829; --surface-2: #1a2238;
+    --ink: #e5e9f0; --sub: #8a93a6; --line: #232b3f;
+    --brand: #818cf8; --brand-2: #6366f1;
+    --good: #34d399; --bad: #f87171; --warn: #fbbf24;
+    --shadow: 0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+  [x-cloak] { display: none !important; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .card-soft { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 10px; font-weight: 500; font-size: 14px; transition: all .15s; cursor: pointer; border: 1px solid transparent; text-decoration: none; }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--brand-2); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost { background: var(--surface-2); color: var(--ink); }
+  .btn-ghost:hover { background: var(--line); }
+  .btn-outline { background: var(--surface); color: var(--ink); border-color: var(--line); }
+  .btn-outline:hover { background: var(--surface-2); }
+  .btn-danger { background: rgba(239,68,68,.1); color: var(--bad); }
+  .btn-danger:hover { background: rgba(239,68,68,.18); }
+  .btn-icon { padding: 8px; border-radius: 8px; }
+
+  input[type=text], input[type=url], input[type=password], input[type=number], input[type=email], select, textarea {
+    width: 100%; background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 10px; padding: 10px 12px; font-size: 14px; transition: all .15s; font-family: inherit;
+  }
+  input::placeholder, textarea::placeholder { color: var(--sub); opacity: .6; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+  textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 90px; resize: vertical; }
+  label { font-size: 13px; color: var(--sub); font-weight: 500; margin-bottom: 6px; display: block; }
 
   /* switch */
-  .switch{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
-  .switch input{opacity:0;width:0;height:0}
-  .slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s;cursor:pointer}
-  .slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.15)}
-  input:checked + .slider{background:#6366f1}
-  input:checked + .slider:before{transform:translateX(18px)}
+  .switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--line); border-radius: 999px; transition: .2s; cursor: pointer; }
+  .slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  input:checked + .slider { background: var(--brand); }
+  input:checked + .slider:before { transform: translateX(18px); }
 
-  /* chips multiselect */
-  .chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#f1f5f9;color:#0f172a;font-size:12px;font-weight:500;border:1px solid #e2e8f0}
-  .chip.active{background:#6366f1;color:#fff;border-color:#6366f1}
-  .chip:hover:not(.active){background:#e2e8f0;cursor:pointer}
+  /* chip */
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 999px; background: var(--surface-2); color: var(--ink); font-size: 12px; font-weight: 500; border: 1px solid var(--line); cursor: pointer; transition: all .12s; user-select: none; }
+  .chip:hover:not(.active) { background: var(--line); }
+  .chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
 
-  /* sidebar */
-  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:#64748b;font-weight:500;font-size:14px;cursor:pointer;transition:all .15s}
-  .nav-item:hover{background:#f1f5f9;color:#0f172a}
-  .nav-item.active{background:#eef2ff;color:#4f46e5}
-  .nav-item svg{width:18px;height:18px;flex-shrink:0}
+  /* badges */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-good { background: rgba(16,185,129,.15); color: var(--good); }
+  .badge-bad  { background: rgba(239,68,68,.15); color: var(--bad); }
+  .badge-warn { background: rgba(245,158,11,.15); color: var(--warn); }
+  .badge-sub  { background: var(--surface-2); color: var(--sub); }
+
+  /* sidebar nav */
+  .nav-item { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 10px; color: var(--sub); font-weight: 500; font-size: 14px; cursor: pointer; transition: all .12s; }
+  .nav-item:hover { background: var(--surface-2); color: var(--ink); }
+  .nav-item.active { background: rgba(99,102,241,.12); color: var(--brand); }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 
   /* tables */
-  table{width:100%;border-collapse:collapse}
-  th{text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;background:#f7f8fb;border-bottom:1px solid #e2e8f0}
-  td{padding:12px 14px;border-bottom:1px solid #f1f5f9;font-size:14px;color:#0f172a;vertical-align:middle}
-  tr:last-child td{border-bottom:none}
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .06em; padding: 11px 14px; background: var(--surface-2); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface-2); }
 
-  /* modal */
-  .modal-bg{background:rgba(15,23,42,.55);backdrop-filter:blur(6px)}
+  .modal-bg { background: rgba(0,0,0,.55); backdrop-filter: blur(8px); }
 
-  /* fancy kpi */
-  .kpi-label{font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em}
-  .kpi-value{font-size:28px;font-weight:800;color:#0f172a;line-height:1;margin-top:8px}
+  .kpi-label { font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .06em; }
+  .kpi-value { font-size: 30px; font-weight: 800; color: var(--ink); line-height: 1; margin-top: 8px; }
+  .kpi-hint { font-size: 12px; color: var(--sub); margin-top: 6px; }
 
-  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
-  .badge-good{background:#d1fae5;color:#065f46}
-  .badge-bad{background:#fee2e2;color:#991b1b}
-  .badge-sub{background:#e2e8f0;color:#475569}
+  .step-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; background: var(--surface-2); color: var(--sub); transition: all .15s; border: 1px solid var(--line); }
+  .step-dot.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .step-dot.done { background: var(--good); color: #fff; border-color: var(--good); }
+  .step-bar { flex: 1; height: 2px; background: var(--line); margin: 0 10px; transition: all .15s; }
+  .step-bar.done { background: var(--good); }
 
-  .step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#e2e8f0;color:#64748b}
-  .step-dot.active{background:#6366f1;color:#fff}
-  .step-dot.done{background:#10b981;color:#fff}
-  .step-bar{flex:1;height:2px;background:#e2e8f0;margin:0 8px}
-  .step-bar.done{background:#10b981}
+  .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  .scroll-thin::-webkit-scrollbar-thumb:hover { background: var(--sub); }
 
-  .scroll-thin::-webkit-scrollbar{width:8px;height:8px}
-  .scroll-thin::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+  .copy-btn { cursor: pointer; color: var(--brand); font-weight: 500; font-size: 13px; display: inline-flex; gap: 4px; align-items: center; }
+  .copy-btn:hover { color: var(--brand-2); }
 
-  .copy-btn{cursor:pointer;color:#6366f1;font-weight:500;font-size:13px;display:inline-flex;gap:4px;align-items:center}
-  .copy-btn:hover{color:#4f46e5}
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 22px; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.25); z-index: 100; font-size: 14px; font-weight: 500; animation: slideUp .25s ease-out; }
+  @keyframes slideUp { from { transform: translate(-50%, 12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 
-  .toast{position:fixed;bottom:24px;right:24px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:100;font-size:14px}
+  .empty-ic { width: 72px; height: 72px; border-radius: 50%; background: rgba(99,102,241,.12); color: var(--brand); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+
+  .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--line); padding: 0 24px; }
+  .tab-link { padding: 12px 16px; font-size: 14px; font-weight: 500; color: var(--sub); border-bottom: 2px solid transparent; cursor: pointer; transition: all .12s; margin-bottom: -1px; }
+  .tab-link:hover { color: var(--ink); }
+  .tab-link.active { color: var(--brand); border-color: var(--brand); }
+
+  .flow-link { font-family: ui-monospace, monospace; font-size: 13px; color: var(--sub); word-break: break-all; }
+  .flow-link:hover { color: var(--brand); }
+
+  .theme-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; }
+  .theme-btn:hover { background: var(--line); }
+
+  .help-box { background: rgba(99,102,241,.08); border: 1px solid rgba(99,102,241,.25); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--sub); display: flex; gap: 10px; align-items: flex-start; }
+  .help-box svg { flex-shrink: 0; color: var(--brand); margin-top: 1px; }
 </style>
 </head>
 
-<body x-data="app()" x-init="init()">
+<body x-data="app()" x-init="init()" class="min-h-screen">
 
-<!-- ===================== LOGIN ===================== -->
+<!-- ==================== LOGIN ==================== -->
 <template x-if="!authed">
   <div class="min-h-screen flex items-center justify-center p-6">
     <div class="card p-8 w-full max-w-md">
-      <div class="flex items-center gap-3 mb-6">
-        <div class="w-12 h-12 rounded-xl bg-brand flex items-center justify-center text-white font-bold text-2xl">C</div>
-        <div>
-          <div class="font-bold text-xl">Cloakly</div>
-          <div class="text-sub text-sm" x-text="t('login.subtitle')"></div>
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-[var(--brand)] flex items-center justify-center text-white font-bold text-xl">C</div>
+          <div>
+            <div class="font-bold text-xl">Cloakly</div>
+            <div class="text-[13px]" style="color:var(--sub)" x-text="t('login.subtitle')"></div>
+          </div>
         </div>
+        <button class="theme-btn" @click="toggleTheme()" :title="t('theme.toggle')">
+          <svg x-show="theme==='dark'" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 7a5 5 0 100 10 5 5 0 000-10zM12 2v2m0 16v2m10-10h-2M4 12H2m15.5-7.5l-1.4 1.4M7.9 16.1l-1.4 1.4m0-13l1.4 1.4m8.2 8.2l1.4 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+          <svg x-show="theme==='light'" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
       </div>
       <label x-text="t('login.token')"></label>
       <input type="password" x-model="tokenInput" @keydown.enter="login()" :placeholder="t('login.placeholder')">
       <button class="btn btn-primary w-full justify-center mt-4" @click="login()" x-text="t('login.signin')"></button>
-      <div class="text-xs text-sub mt-4" x-text="t('login.hint')"></div>
-      <!-- language switcher -->
-      <div class="flex justify-center gap-2 mt-6 pt-6 border-t border-line">
+      <div class="help-box mt-5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span x-text="t('login.hint')"></span>
+      </div>
+      <div class="flex justify-center gap-2 mt-5 pt-5 border-t" style="border-color:var(--line)">
         <button class="chip" :class="lang==='en' && 'active'" @click="setLang('en')">English</button>
         <button class="chip" :class="lang==='ru' && 'active'" @click="setLang('ru')">Русский</button>
       </div>
@@ -131,20 +158,20 @@ tailwind.config = {
   </div>
 </template>
 
-<!-- ===================== MAIN LAYOUT ===================== -->
+<!-- ==================== MAIN ==================== -->
 <div x-show="authed" x-cloak class="flex min-h-screen">
 
   <!-- SIDEBAR -->
-  <aside class="w-64 bg-white border-r border-line flex flex-col">
-    <div class="p-5 border-b border-line flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-brand flex items-center justify-center text-white font-bold">C</div>
-      <div>
-        <div class="font-bold">Cloakly</div>
-        <div class="text-xs text-sub" x-text="t('app.tagline')"></div>
+  <aside class="w-64 border-r flex flex-col" style="background:var(--surface);border-color:var(--line)">
+    <div class="p-5 border-b flex items-center gap-3" style="border-color:var(--line)">
+      <div class="w-9 h-9 rounded-lg bg-[var(--brand)] flex items-center justify-center text-white font-bold">C</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold truncate">Cloakly</div>
+        <div class="text-xs truncate" style="color:var(--sub)" x-text="t('app.tagline')"></div>
       </div>
     </div>
 
-    <nav class="p-3 flex-1">
+    <nav class="p-3 flex-1 space-y-1">
       <div class="nav-item" :class="tab==='dashboard' && 'active'" @click="tab='dashboard';refresh()">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h7v9H3V3zm11 0h7v5h-7V3zM3 16h7v5H3v-5zm11-5h7v10h-7V11z"/></svg>
         <span x-text="t('nav.dashboard')"></span>
@@ -152,6 +179,7 @@ tailwind.config = {
       <div class="nav-item" :class="tab==='flows' && 'active'" @click="tab='flows';loadFlows()">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         <span x-text="t('nav.flows')"></span>
+        <span class="ml-auto text-xs px-2 py-0.5 rounded-full" style="background:var(--surface-2);color:var(--sub)" x-text="flows.length"></span>
       </div>
       <div class="nav-item" :class="tab==='visits' && 'active'" @click="tab='visits';loadVisits()">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -159,10 +187,14 @@ tailwind.config = {
       </div>
     </nav>
 
-    <div class="p-4 border-t border-line space-y-3">
+    <div class="p-4 border-t space-y-3" style="border-color:var(--line)">
       <div class="flex gap-2">
         <button class="chip flex-1 justify-center" :class="lang==='en' && 'active'" @click="setLang('en')">EN</button>
         <button class="chip flex-1 justify-center" :class="lang==='ru' && 'active'" @click="setLang('ru')">RU</button>
+        <button class="theme-btn" @click="toggleTheme()" :title="t('theme.toggle')">
+          <svg x-show="theme==='dark'" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 7a5 5 0 100 10 5 5 0 000-10zM12 2v2m0 16v2m10-10h-2M4 12H2m15.5-7.5l-1.4 1.4M7.9 16.1l-1.4 1.4m0-13l1.4 1.4m8.2 8.2l1.4 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+          <svg x-show="theme==='light'" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
       </div>
       <button class="btn btn-ghost w-full justify-center text-sm" @click="logout()">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -174,16 +206,24 @@ tailwind.config = {
   <!-- CONTENT -->
   <main class="flex-1 overflow-auto">
 
-    <!-- ========== DASHBOARD ========== -->
-    <section x-show="tab==='dashboard'" class="p-8">
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold" x-text="t('dash.title')"></h1>
-        <select x-model.number="rangeHours" @change="refresh()" class="!w-44">
-          <option value="1" x-text="t('range.1h')"></option>
-          <option value="24" x-text="t('range.24h')"></option>
-          <option value="168" x-text="t('range.7d')"></option>
-          <option value="720" x-text="t('range.30d')"></option>
-        </select>
+    <!-- DASHBOARD -->
+    <section x-show="tab==='dashboard'" class="p-8 max-w-7xl mx-auto">
+      <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+        <div>
+          <h1 class="text-2xl font-bold" x-text="t('dash.title')"></h1>
+          <div class="text-sm mt-1" style="color:var(--sub)" x-text="t('dash.subtitle')"></div>
+        </div>
+        <div class="flex gap-2 items-center">
+          <select x-model.number="rangeHours" @change="refresh()" class="!w-44">
+            <option :value="1" x-text="t('range.1h')"></option>
+            <option :value="24" x-text="t('range.24h')"></option>
+            <option :value="168" x-text="t('range.7d')"></option>
+            <option :value="720" x-text="t('range.30d')"></option>
+          </select>
+          <button class="btn btn-ghost btn-icon" @click="refresh()" :title="t('actions.refresh')">
+            <svg class="w-4 h-4" :class="refreshing && 'animate-spin'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.85-3.36L23 9M20 15a9 9 0 01-14.85 3.36L1 15"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- KPIs -->
@@ -191,125 +231,133 @@ tailwind.config = {
         <div class="card p-5">
           <div class="kpi-label" x-text="t('kpi.visitors')"></div>
           <div class="kpi-value" x-text="(overview.total||0).toLocaleString()"></div>
-          <div class="text-xs text-sub mt-2"><span x-text="overview.unique_ips||0"></span> <span x-text="t('kpi.unique_ips')"></span></div>
+          <div class="kpi-hint"><span x-text="overview.unique_ips||0"></span> <span x-text="t('kpi.unique_ips')"></span></div>
         </div>
         <div class="card p-5">
           <div class="kpi-label" x-text="t('kpi.passed')"></div>
-          <div class="kpi-value text-good" x-text="(overview.real||0).toLocaleString()"></div>
-          <div class="text-xs text-sub mt-2"><span x-text="passRate()"></span>% <span x-text="t('kpi.pass_rate')"></span></div>
+          <div class="kpi-value" style="color:var(--good)" x-text="(overview.real||0).toLocaleString()"></div>
+          <div class="kpi-hint"><span x-text="passRate()"></span>% <span x-text="t('kpi.pass_rate')"></span></div>
         </div>
         <div class="card p-5">
           <div class="kpi-label" x-text="t('kpi.blocked')"></div>
-          <div class="kpi-value text-bad" x-text="(overview.blocked||0).toLocaleString()"></div>
-          <div class="text-xs text-sub mt-2"><span x-text="blockRate()"></span>% <span x-text="t('kpi.block_rate')"></span></div>
+          <div class="kpi-value" style="color:var(--bad)" x-text="(overview.blocked||0).toLocaleString()"></div>
+          <div class="kpi-hint"><span x-text="blockRate()"></span>% <span x-text="t('kpi.block_rate')"></span></div>
         </div>
         <div class="card p-5">
           <div class="kpi-label" x-text="t('kpi.countries')"></div>
           <div class="kpi-value" x-text="overview.countries||0"></div>
-          <div class="text-xs text-sub mt-2" x-text="t('kpi.countries_hint')"></div>
+          <div class="kpi-hint" x-text="t('kpi.countries_hint')"></div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        <!-- Timeline -->
         <div class="card p-5 lg:col-span-2">
-          <div class="flex justify-between items-center mb-3">
+          <div class="flex justify-between items-center mb-4">
             <div class="font-semibold" x-text="t('dash.timeline')"></div>
-            <div class="flex gap-3 text-xs text-sub">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-good inline-block"></span> <span x-text="t('kpi.passed')"></span></span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-bad inline-block"></span> <span x-text="t('kpi.blocked')"></span></span>
+            <div class="flex gap-3 text-xs" style="color:var(--sub)">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:var(--good)"></span> <span x-text="t('kpi.passed')"></span></span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:var(--bad)"></span> <span x-text="t('kpi.blocked')"></span></span>
             </div>
           </div>
           <div class="h-56" x-ref="chart"></div>
         </div>
 
-        <!-- Reasons -->
         <div class="card p-5">
-          <div class="font-semibold mb-3" x-text="t('dash.reasons')"></div>
-          <div class="space-y-2 max-h-52 overflow-auto scroll-thin">
+          <div class="font-semibold mb-4" x-text="t('dash.reasons')"></div>
+          <div class="space-y-3 max-h-52 overflow-auto scroll-thin">
             <template x-for="r in reasons" :key="r.category">
               <div>
-                <div class="flex justify-between text-sm mb-1">
+                <div class="flex justify-between text-sm mb-1.5">
                   <span x-text="t('reason.'+r.category) || r.category"></span>
                   <span class="font-semibold" x-text="r.count"></span>
                 </div>
-                <div class="h-1.5 bg-soft rounded-full overflow-hidden">
-                  <div class="h-full bg-bad" :style="'width:'+reasonPct(r.count)+'%'"></div>
+                <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--surface-2)">
+                  <div class="h-full" style="background:var(--bad)" :style="'background:var(--bad);width:'+reasonPct(r.count)+'%'"></div>
                 </div>
               </div>
             </template>
-            <div x-show="reasons.length===0" class="text-sm text-sub" x-text="t('empty.no_blocks')"></div>
+            <div x-show="reasons.length===0" class="py-8 text-center text-sm" style="color:var(--sub)" x-text="t('empty.no_blocks')"></div>
           </div>
         </div>
       </div>
 
-      <!-- Countries -->
       <div class="card p-5">
-        <div class="font-semibold mb-3" x-text="t('dash.top_countries')"></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-          <template x-for="c in countriesStats.slice(0,12)" :key="c.country">
-            <div class="flex items-center justify-between p-2 rounded-lg bg-soft text-sm">
-              <span class="font-medium" x-text="c.country"></span>
-              <span class="text-sub" x-text="c.total"></span>
+        <div class="font-semibold mb-4" x-text="t('dash.top_countries')"></div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <template x-for="c in countriesStats.slice(0,18)" :key="c.country">
+            <div class="card-soft p-3">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-sm" x-text="c.country"></span>
+                <span class="text-xs" style="color:var(--sub)" x-text="c.total"></span>
+              </div>
+              <div class="mt-2 flex gap-1 h-1 rounded-full overflow-hidden" style="background:var(--line)">
+                <div :style="'background:var(--good);flex:'+(c.real||0)"></div>
+                <div :style="'background:var(--bad);flex:'+(c.blocked||0)"></div>
+              </div>
             </div>
           </template>
-          <div x-show="countriesStats.length===0" class="text-sm text-sub col-span-full" x-text="t('empty.no_traffic')"></div>
+          <div x-show="countriesStats.length===0" class="col-span-full py-8 text-center text-sm" style="color:var(--sub)" x-text="t('empty.no_traffic')"></div>
         </div>
       </div>
     </section>
 
-    <!-- ========== FLOWS LIST ========== -->
-    <section x-show="tab==='flows'" class="p-8">
+    <!-- FLOWS -->
+    <section x-show="tab==='flows'" class="p-8 max-w-7xl mx-auto">
       <div class="flex items-center justify-between mb-6">
         <div>
           <h1 class="text-2xl font-bold" x-text="t('flows.title')"></h1>
-          <div class="text-sub text-sm mt-1" x-text="t('flows.subtitle')"></div>
+          <div class="text-sm mt-1" style="color:var(--sub)" x-text="t('flows.subtitle')"></div>
         </div>
         <button class="btn btn-primary" @click="openWizard()">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           <span x-text="t('flows.create')"></span>
         </button>
       </div>
 
-      <!-- empty state -->
-      <div x-show="flows.length===0" class="card p-12 text-center">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-soft flex items-center justify-center">
-          <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <div x-show="flows.length===0" class="card p-16 text-center">
+        <div class="empty-ic">
+          <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
-        <h3 class="font-semibold text-lg mb-2" x-text="t('flows.empty_title')"></h3>
-        <p class="text-sub mb-6 max-w-sm mx-auto" x-text="t('flows.empty_desc')"></p>
-        <button class="btn btn-primary" @click="openWizard()" x-text="t('flows.create')"></button>
+        <h3 class="font-bold text-xl mb-2" x-text="t('flows.empty_title')"></h3>
+        <p class="text-sm max-w-md mx-auto mb-6" style="color:var(--sub)" x-text="t('flows.empty_desc')"></p>
+        <button class="btn btn-primary" @click="openWizard()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span x-text="t('flows.create_first')"></span>
+        </button>
       </div>
 
-      <!-- flow cards -->
-      <div x-show="flows.length>0" class="grid gap-4">
+      <div x-show="flows.length>0" class="grid gap-3">
         <template x-for="flow in flows" :key="flow.id">
-          <div class="card p-5">
-            <div class="flex items-start justify-between gap-4">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <h3 class="font-semibold text-lg truncate" x-text="flow.name"></h3>
-                  <span class="badge" :class="flow.status==='active' ? 'badge-good' : 'badge-sub'" x-text="flow.status==='active' ? t('status.active') : t('status.paused')"></span>
+          <div class="card p-5 hover:border-[var(--brand)] transition-colors">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div class="flex-1 min-w-[240px]">
+                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <h3 class="font-semibold text-lg" x-text="flow.name"></h3>
+                  <span class="badge" :class="flow.status==='active' ? 'badge-good' : 'badge-sub'">
+                    <span x-show="flow.status==='active'" class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                    <span x-text="flow.status==='active' ? t('status.active') : t('status.paused')"></span>
+                  </span>
                 </div>
-                <div class="flex items-center gap-2 text-sm text-sub flex-wrap">
-                  <a :href="'/f/'+flow.slug" target="_blank" class="font-mono hover:text-brand break-all" x-text="origin()+'/f/'+flow.slug"></a>
-                  <button class="copy-btn" @click="copy(origin()+'/f/'+flow.slug)">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <a :href="'/f/'+flow.slug" target="_blank" class="flow-link" x-text="origin()+'/f/'+flow.slug"></a>
+                  <button class="copy-btn" @click="copy(origin()+'/f/'+flow.slug)" :title="t('actions.copy')">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                   </button>
                 </div>
-                <div x-show="flow.domain" class="text-sm text-sub mt-1">
-                  <span x-text="t('flows.domain')"></span>: <span class="font-mono text-ink" x-text="flow.domain"></span>
+                <div x-show="flow.domain" class="text-xs mt-1.5" style="color:var(--sub)">
+                  <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                  <span x-text="t('flows.domain')"></span>: <span class="font-mono" style="color:var(--ink)" x-text="flow.domain"></span>
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 flex-shrink-0">
+              <div class="flex items-center gap-5 flex-shrink-0">
                 <div class="text-center">
-                  <div class="text-lg font-bold text-good" x-text="flow.real_visits||0"></div>
-                  <div class="text-xs text-sub" x-text="t('kpi.passed')"></div>
+                  <div class="text-xl font-bold" style="color:var(--good)" x-text="flow.real_visits||0"></div>
+                  <div class="text-xs" style="color:var(--sub)" x-text="t('kpi.passed')"></div>
                 </div>
                 <div class="text-center">
-                  <div class="text-lg font-bold text-bad" x-text="flow.blocked_visits||0"></div>
-                  <div class="text-xs text-sub" x-text="t('kpi.blocked')"></div>
+                  <div class="text-xl font-bold" style="color:var(--bad)" x-text="flow.blocked_visits||0"></div>
+                  <div class="text-xs" style="color:var(--sub)" x-text="t('kpi.blocked')"></div>
                 </div>
                 <label class="switch" @click.stop>
                   <input type="checkbox" :checked="flow.status==='active'" @change="toggleFlow(flow)">
@@ -333,10 +381,13 @@ tailwind.config = {
       </div>
     </section>
 
-    <!-- ========== VISITS ========== -->
-    <section x-show="tab==='visits'" class="p-8">
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold" x-text="t('visits.title')"></h1>
+    <!-- VISITS -->
+    <section x-show="tab==='visits'" class="p-8 max-w-7xl mx-auto">
+      <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div>
+          <h1 class="text-2xl font-bold" x-text="t('visits.title')"></h1>
+          <div class="text-sm mt-1" style="color:var(--sub)" x-text="t('visits.subtitle')"></div>
+        </div>
         <div class="flex gap-2">
           <select x-model="visitsFilter" @change="loadVisits()" class="!w-40">
             <option value="" x-text="t('visits.all')"></option>
@@ -351,9 +402,9 @@ tailwind.config = {
       </div>
 
       <div class="card overflow-hidden">
-        <div class="overflow-auto max-h-[70vh] scroll-thin">
+        <div class="overflow-auto max-h-[72vh] scroll-thin">
           <table>
-            <thead class="sticky top-0">
+            <thead>
               <tr>
                 <th x-text="t('visits.time')"></th>
                 <th x-text="t('visits.flow')"></th>
@@ -367,10 +418,13 @@ tailwind.config = {
             <tbody>
               <template x-for="v in visits" :key="v.id">
                 <tr>
-                  <td class="text-sub text-xs whitespace-nowrap" x-text="fmtDate(v.ts)"></td>
+                  <td class="text-xs whitespace-nowrap" style="color:var(--sub)" x-text="fmtDate(v.ts)"></td>
                   <td><span class="font-medium" x-text="v.flow_name"></span></td>
-                  <td class="font-mono text-xs" x-text="v.ip"></td>
-                  <td x-text="v.country || '—'"></td>
+                  <td class="font-mono text-xs" x-text="v.ip || '—'"></td>
+                  <td>
+                    <span x-show="v.country" class="font-medium" x-text="v.country"></span>
+                    <span x-show="!v.country" style="color:var(--sub)">—</span>
+                  </td>
                   <td class="capitalize" x-text="v.device || '—'"></td>
                   <td x-text="v.browser || '—'"></td>
                   <td>
@@ -379,7 +433,15 @@ tailwind.config = {
                   </td>
                 </tr>
               </template>
-              <tr x-show="visits.length===0"><td colspan="7" class="text-center text-sub py-12" x-text="t('empty.no_visits')"></td></tr>
+              <tr x-show="visits.length===0">
+                <td colspan="7" class="py-16 text-center">
+                  <div class="empty-ic">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </div>
+                  <div class="font-semibold mb-1" x-text="t('empty.no_visits_title')"></div>
+                  <div class="text-sm" style="color:var(--sub)" x-text="t('empty.no_visits')"></div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -389,152 +451,171 @@ tailwind.config = {
   </main>
 </div>
 
-<!-- ==================== CREATE WIZARD ==================== -->
+<!-- ==================== WIZARD ==================== -->
 <div x-show="wizard.open" x-cloak class="fixed inset-0 modal-bg flex items-start justify-center overflow-auto py-10 px-4 z-50">
   <div class="card w-full max-w-2xl">
-    <div class="flex items-center justify-between p-6 border-b border-line">
+    <div class="flex items-center justify-between p-6 border-b" style="border-color:var(--line)">
       <h2 class="text-lg font-bold" x-text="t('wizard.title')"></h2>
       <button class="btn btn-ghost btn-icon" @click="wizard.open=false">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <!-- progress -->
-    <div class="px-6 pt-5 pb-1 flex items-center text-sm">
-      <div class="step-dot" :class="wizard.step===1 ? 'active' : (wizard.step>1 ? 'done' : '')">1</div>
+    <div class="px-8 pt-6 pb-2 flex items-center">
+      <div class="step-dot" :class="wizard.step===1 ? 'active' : (wizard.step>1 ? 'done' : '')" x-text="wizard.step>1 ? '✓' : '1'"></div>
       <div class="step-bar" :class="wizard.step>1 && 'done'"></div>
-      <div class="step-dot" :class="wizard.step===2 ? 'active' : (wizard.step>2 ? 'done' : '')">2</div>
+      <div class="step-dot" :class="wizard.step===2 ? 'active' : (wizard.step>2 ? 'done' : '')" x-text="wizard.step>2 ? '✓' : '2'"></div>
       <div class="step-bar" :class="wizard.step>2 && 'done'"></div>
       <div class="step-dot" :class="wizard.step===3 ? 'active' : ''">3</div>
     </div>
-    <div class="px-6 pt-2 pb-3 flex text-xs text-sub">
+    <div class="px-8 pb-3 flex text-xs" style="color:var(--sub)">
       <div class="flex-1" x-text="t('wizard.step1')"></div>
       <div class="flex-1 text-center" x-text="t('wizard.step2')"></div>
       <div class="flex-1 text-right" x-text="t('wizard.step3')"></div>
     </div>
 
-    <!-- step 1: name & destinations -->
-    <div x-show="wizard.step===1" class="p-6 space-y-4">
+    <!-- STEP 1 -->
+    <div x-show="wizard.step===1" class="p-6 space-y-5">
+      <div class="help-box">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span x-text="t('wizard.intro')"></span>
+      </div>
+
       <div>
         <label x-text="t('wizard.name')"></label>
-        <input type="text" x-model="wizard.data.name" :placeholder="t('wizard.name_placeholder')">
-        <div class="text-xs text-sub mt-1" x-text="t('wizard.name_hint')"></div>
+        <input type="text" x-model="wizard.data.name" :placeholder="t('wizard.name_placeholder')" @keydown.enter="wizard.data.name && wizard.data.money_url && wizardNext()">
+        <div class="text-xs mt-1.5" style="color:var(--sub)" x-text="t('wizard.name_hint')"></div>
       </div>
 
       <div>
-        <label x-text="t('wizard.money_title')"></label>
-        <div class="text-xs text-sub mb-2" x-text="t('wizard.money_desc')"></div>
+        <label><span class="text-green-500">●</span> <span x-text="t('wizard.money_title')"></span></label>
         <input type="url" x-model="wizard.data.money_url" placeholder="https://your-offer.com/?clickid={clickid}">
+        <div class="text-xs mt-1.5" style="color:var(--sub)" x-text="t('wizard.money_desc')"></div>
       </div>
 
       <div>
-        <label x-text="t('wizard.safe_title')"></label>
-        <div class="text-xs text-sub mb-2" x-text="t('wizard.safe_desc')"></div>
-        <input type="url" x-model="wizard.data.safe_url" placeholder="https://example.com">
-        <div class="text-xs text-sub mt-1" x-text="t('wizard.safe_hint')"></div>
+        <label><span class="text-red-500">●</span> <span x-text="t('wizard.safe_title')"></span></label>
+        <input type="url" x-model="wizard.data.safe_url" placeholder="https://en.wikipedia.org/wiki/Health">
+        <div class="text-xs mt-1.5" style="color:var(--sub)" x-text="t('wizard.safe_hint')"></div>
       </div>
     </div>
 
-    <!-- step 2: quick filters -->
+    <!-- STEP 2 -->
     <div x-show="wizard.step===2" class="p-6 space-y-4">
-      <div class="text-sm text-sub mb-2" x-text="t('wizard.filters_hint')"></div>
+      <div class="help-box">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        <span x-text="t('wizard.filters_hint')"></span>
+      </div>
 
-      <div class="space-y-3">
+      <div class="space-y-2">
         <template x-for="key in ['block_bots','block_datacenter','block_vpn_proxy','block_headless','block_empty_ua','block_no_lang']" :key="key">
-          <div class="flex items-center justify-between p-3 rounded-xl bg-soft">
-            <div>
+          <div class="flex items-center justify-between p-3 rounded-xl card-soft">
+            <div class="flex-1 pr-4">
               <div class="font-medium text-sm" x-text="t('filter.'+key)"></div>
-              <div class="text-xs text-sub" x-text="t('filter.'+key+'_desc')"></div>
+              <div class="text-xs mt-0.5" style="color:var(--sub)" x-text="t('filter.'+key+'_desc')"></div>
             </div>
             <label class="switch">
-              <input type="checkbox" x-model="wizard.data[key]" :true-value="1" :false-value="0">
+              <input type="checkbox" :checked="wizard.data[key]===1" @change="wizard.data[key]=$event.target.checked?1:0">
               <span class="slider"></span>
             </label>
           </div>
         </template>
       </div>
 
-      <div>
+      <div class="pt-2">
         <label x-text="t('wizard.countries_mode')"></label>
-        <div class="flex gap-2">
+        <div class="flex gap-2 mb-3 flex-wrap">
           <button class="chip" :class="wizard.data.countries_mode==='any' && 'active'" @click="wizard.data.countries_mode='any'" x-text="t('countries.any')"></button>
           <button class="chip" :class="wizard.data.countries_mode==='allow' && 'active'" @click="wizard.data.countries_mode='allow'" x-text="t('countries.allow')"></button>
           <button class="chip" :class="wizard.data.countries_mode==='block' && 'active'" @click="wizard.data.countries_mode='block'" x-text="t('countries.block')"></button>
         </div>
-      </div>
 
-      <div x-show="wizard.data.countries_mode!=='any'">
-        <label x-text="t('wizard.countries_list')"></label>
-        <div class="border border-line rounded-xl p-3 max-h-48 overflow-auto scroll-thin flex flex-wrap gap-1.5">
-          <template x-for="c in allCountries" :key="c.code">
-            <span class="chip" :class="wizard.data.countriesArr?.includes(c.code) && 'active'" @click="toggleArr(wizard.data,'countriesArr',c.code)">
-              <span x-text="c.code"></span> <span class="opacity-70" x-text="c.name"></span>
-            </span>
-          </template>
+        <div x-show="wizard.data.countries_mode!=='any'">
+          <input type="text" x-model="wizard.countrySearch" :placeholder="t('wizard.country_search')" class="mb-2">
+          <div class="border rounded-xl p-3 max-h-48 overflow-auto scroll-thin flex flex-wrap gap-1.5" style="border-color:var(--line)">
+            <template x-for="c in filteredCountries()" :key="c.code">
+              <span class="chip" :class="wizard.data.countriesArr?.includes(c.code) && 'active'" @click="toggleArr(wizard.data,'countriesArr',c.code)">
+                <span x-text="c.code"></span> <span class="opacity-70" x-text="c.name"></span>
+              </span>
+            </template>
+          </div>
+          <div class="text-xs mt-1.5" style="color:var(--sub)">
+            <span x-text="wizard.data.countriesArr?.length || 0"></span> <span x-text="t('wizard.selected')"></span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- step 3: done -->
-    <div x-show="wizard.step===3" class="p-6 space-y-4">
-      <div class="text-center py-6">
-        <div class="w-16 h-16 rounded-full bg-good/20 text-good flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    <!-- STEP 3 -->
+    <div x-show="wizard.step===3" class="p-6 space-y-5">
+      <div class="text-center py-4">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(16,185,129,.15);color:var(--good)">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
         </div>
         <h3 class="font-bold text-xl mb-2" x-text="t('wizard.ready_title')"></h3>
-        <div class="text-sub" x-text="t('wizard.ready_desc')"></div>
+        <div style="color:var(--sub)" x-text="t('wizard.ready_desc')"></div>
       </div>
 
-      <div class="bg-soft rounded-xl p-4">
-        <div class="text-xs text-sub mb-2" x-text="t('wizard.your_link')"></div>
+      <div class="card-soft p-4">
+        <div class="text-xs mb-2" style="color:var(--sub)" x-text="t('wizard.your_link')"></div>
         <div class="flex items-center gap-2">
-          <input type="text" readonly :value="origin()+'/f/'+(wizard.created?.slug||'')" class="!bg-white font-mono text-sm">
-          <button class="btn btn-primary" @click="copy(origin()+'/f/'+(wizard.created?.slug||''))" x-text="t('actions.copy')"></button>
+          <input type="text" readonly :value="origin()+'/f/'+(wizard.created?.slug||'')" class="font-mono text-sm">
+          <button class="btn btn-primary" @click="copy(origin()+'/f/'+(wizard.created?.slug||''))">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            <span x-text="t('actions.copy')"></span>
+          </button>
         </div>
-        <div class="text-xs text-sub mt-3" x-text="t('wizard.link_hint')"></div>
+      </div>
+
+      <div class="help-box">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span x-text="t('wizard.link_hint')"></span>
       </div>
     </div>
 
-    <!-- footer -->
-    <div class="p-6 border-t border-line flex justify-between">
-      <button class="btn btn-ghost" x-show="wizard.step>1 && wizard.step<3" @click="wizard.step--" x-text="t('wizard.back')"></button>
+    <div class="p-6 border-t flex justify-between items-center" style="border-color:var(--line)">
+      <button class="btn btn-ghost" x-show="wizard.step>1 && wizard.step<3" @click="wizard.step--">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <span x-text="t('wizard.back')"></span>
+      </button>
       <div></div>
       <div class="flex gap-2">
         <button class="btn btn-ghost" x-show="wizard.step<3" @click="wizard.open=false" x-text="t('wizard.cancel')"></button>
-        <button class="btn btn-primary" x-show="wizard.step===1" @click="wizardNext()" :disabled="!wizard.data.name || !wizard.data.money_url" x-text="t('wizard.next')"></button>
-        <button class="btn btn-primary" x-show="wizard.step===2" @click="wizardCreate()" x-text="t('wizard.create')"></button>
+        <button class="btn btn-primary" x-show="wizard.step===1" @click="wizardNext()" :disabled="!wizard.data.name || !wizard.data.money_url">
+          <span x-text="t('wizard.next')"></span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn btn-primary" x-show="wizard.step===2" @click="wizardCreate()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <span x-text="t('wizard.create')"></span>
+        </button>
         <button class="btn btn-primary" x-show="wizard.step===3" @click="wizard.open=false;loadFlows()" x-text="t('wizard.done')"></button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ==================== EDIT MODAL ==================== -->
+<!-- ==================== EDITOR ==================== -->
 <div x-show="editor.open" x-cloak class="fixed inset-0 modal-bg flex items-start justify-center overflow-auto py-8 px-4 z-50">
   <div class="card w-full max-w-3xl">
-    <div class="flex items-center justify-between p-6 border-b border-line">
-      <h2 class="text-lg font-bold">
-        <span x-text="t('editor.title')"></span>:
-        <span class="text-brand" x-text="editor.data.name"></span>
-      </h2>
+    <div class="flex items-center justify-between p-6 border-b" style="border-color:var(--line)">
+      <div>
+        <div class="text-xs font-medium" style="color:var(--sub)" x-text="t('editor.title')"></div>
+        <h2 class="text-lg font-bold" x-text="editor.data.name || '—'"></h2>
+      </div>
       <button class="btn btn-ghost btn-icon" @click="editor.open=false">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <!-- tabs -->
-    <div class="px-6 pt-4 flex gap-1 border-b border-line">
-      <template x-for="tb in ['general','filters','advanced']" :key="tb">
-        <button class="px-4 py-2 text-sm font-medium border-b-2 -mb-px"
-                :class="editor.tab===tb ? 'border-brand text-brand' : 'border-transparent text-sub hover:text-ink'"
-                @click="editor.tab=tb"
-                x-text="t('editor.tab.'+tb)"></button>
-      </template>
+    <div class="tab-bar">
+      <div class="tab-link" :class="editor.tab==='general' && 'active'" @click="editor.tab='general'" x-text="t('editor.tab.general')"></div>
+      <div class="tab-link" :class="editor.tab==='filters' && 'active'" @click="editor.tab='filters'" x-text="t('editor.tab.filters')"></div>
+      <div class="tab-link" :class="editor.tab==='advanced' && 'active'" @click="editor.tab='advanced'" x-text="t('editor.tab.advanced')"></div>
     </div>
 
-    <div class="p-6 max-h-[65vh] overflow-auto scroll-thin space-y-5">
+    <div class="p-6 max-h-[62vh] overflow-auto scroll-thin space-y-5">
 
-      <!-- GENERAL -->
       <div x-show="editor.tab==='general'" class="space-y-5">
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -550,45 +631,49 @@ tailwind.config = {
         <div>
           <label x-text="t('editor.domain')"></label>
           <input type="text" x-model="editor.data.domain" placeholder="offer.example.com">
-          <div class="text-xs text-sub mt-1" x-text="t('editor.domain_hint')"></div>
+          <div class="text-xs mt-1.5" style="color:var(--sub)" x-text="t('editor.domain_hint')"></div>
         </div>
 
-        <div class="card p-4 bg-soft">
-          <div class="font-semibold text-sm mb-3" x-text="t('wizard.money_title')"></div>
+        <div class="card-soft p-4">
+          <div class="font-semibold text-sm mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full" style="background:var(--good)"></span>
+            <span x-text="t('wizard.money_title')"></span>
+          </div>
           <div class="flex gap-2 mb-3">
             <button class="chip" :class="editor.data.money_mode==='url' && 'active'" @click="editor.data.money_mode='url'" x-text="t('editor.mode_url')"></button>
             <button class="chip" :class="editor.data.money_mode==='html' && 'active'" @click="editor.data.money_mode='html'" x-text="t('editor.mode_html')"></button>
           </div>
           <input x-show="editor.data.money_mode==='url'" type="url" x-model="editor.data.money_url" placeholder="https://offer.com/?clickid={clickid}">
-          <textarea x-show="editor.data.money_mode==='html'" x-model="editor.data.money_html" placeholder="<html>...</html>"></textarea>
-          <div class="text-xs text-sub mt-2" x-text="t('editor.money_hint')"></div>
+          <textarea x-show="editor.data.money_mode==='html'" x-model="editor.data.money_html" placeholder="<html>...</html>" rows="6"></textarea>
+          <div class="text-xs mt-2" style="color:var(--sub)" x-text="t('editor.money_hint')"></div>
         </div>
 
-        <div class="card p-4 bg-soft">
-          <div class="font-semibold text-sm mb-3" x-text="t('wizard.safe_title')"></div>
+        <div class="card-soft p-4">
+          <div class="font-semibold text-sm mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full" style="background:var(--bad)"></span>
+            <span x-text="t('wizard.safe_title')"></span>
+          </div>
           <div class="flex gap-2 mb-3">
             <button class="chip" :class="editor.data.safe_mode==='url' && 'active'" @click="editor.data.safe_mode='url'" x-text="t('editor.mode_url')"></button>
             <button class="chip" :class="editor.data.safe_mode==='html' && 'active'" @click="editor.data.safe_mode='html'" x-text="t('editor.mode_html')"></button>
           </div>
           <input x-show="editor.data.safe_mode==='url'" type="url" x-model="editor.data.safe_url" placeholder="https://wikipedia.org">
-          <textarea x-show="editor.data.safe_mode==='html'" x-model="editor.data.safe_html" placeholder="<html>...</html>"></textarea>
+          <textarea x-show="editor.data.safe_mode==='html'" x-model="editor.data.safe_html" placeholder="<html>...</html>" rows="6"></textarea>
         </div>
       </div>
 
-      <!-- FILTERS -->
       <div x-show="editor.tab==='filters'" class="space-y-4">
-        <!-- bot blockers -->
-        <div class="card p-4">
+        <div class="card-soft p-4">
           <div class="font-semibold text-sm mb-3" x-text="t('editor.group.bots')"></div>
-          <div class="space-y-2">
+          <div class="space-y-1">
             <template x-for="key in ['block_bots','block_datacenter','block_vpn_proxy','block_headless','block_empty_ua','block_no_lang']" :key="key">
-              <div class="flex items-center justify-between py-2">
-                <div>
+              <div class="flex items-center justify-between py-2.5">
+                <div class="flex-1 pr-4">
                   <div class="text-sm font-medium" x-text="t('filter.'+key)"></div>
-                  <div class="text-xs text-sub" x-text="t('filter.'+key+'_desc')"></div>
+                  <div class="text-xs mt-0.5" style="color:var(--sub)" x-text="t('filter.'+key+'_desc')"></div>
                 </div>
                 <label class="switch">
-                  <input type="checkbox" x-model="editor.data[key]" :true-value="1" :false-value="0">
+                  <input type="checkbox" :checked="editor.data[key]===1" @change="editor.data[key]=$event.target.checked?1:0">
                   <span class="slider"></span>
                 </label>
               </div>
@@ -596,20 +681,20 @@ tailwind.config = {
           </div>
         </div>
 
-        <!-- targeting -->
-        <div class="card p-4">
+        <div class="card-soft p-4">
           <div class="font-semibold text-sm mb-3" x-text="t('editor.group.targeting')"></div>
 
           <label x-text="t('wizard.countries_mode')"></label>
-          <div class="flex gap-2 mb-3">
+          <div class="flex gap-2 mb-3 flex-wrap">
             <button class="chip" :class="editor.data.countries_mode==='any' && 'active'" @click="editor.data.countries_mode='any'" x-text="t('countries.any')"></button>
             <button class="chip" :class="editor.data.countries_mode==='allow' && 'active'" @click="editor.data.countries_mode='allow'" x-text="t('countries.allow')"></button>
             <button class="chip" :class="editor.data.countries_mode==='block' && 'active'" @click="editor.data.countries_mode='block'" x-text="t('countries.block')"></button>
           </div>
 
           <div x-show="editor.data.countries_mode!=='any'" class="mb-4">
-            <div class="border border-line rounded-xl p-3 max-h-40 overflow-auto scroll-thin flex flex-wrap gap-1.5">
-              <template x-for="c in allCountries" :key="c.code">
+            <input type="text" x-model="editor.countrySearch" :placeholder="t('wizard.country_search')" class="mb-2">
+            <div class="border rounded-xl p-3 max-h-44 overflow-auto scroll-thin flex flex-wrap gap-1.5" style="border-color:var(--line)">
+              <template x-for="c in filteredCountriesEditor()" :key="c.code">
                 <span class="chip" :class="editor.data.countriesArr?.includes(c.code) && 'active'" @click="toggleArr(editor.data,'countriesArr',c.code)">
                   <span x-text="c.code"></span> <span class="opacity-70" x-text="c.name"></span>
                 </span>
@@ -618,12 +703,11 @@ tailwind.config = {
           </div>
 
           <label x-text="t('filter.devices')"></label>
-          <div class="flex gap-2 mb-4">
+          <div class="flex gap-2 mb-4 flex-wrap">
             <template x-for="d in ['mobile','desktop','tablet']" :key="d">
               <span class="chip" :class="editor.data.devicesArr?.includes(d) && 'active'" @click="toggleArr(editor.data,'devicesArr',d)" x-text="t('device.'+d)"></span>
             </template>
           </div>
-          <div class="text-xs text-sub mb-4" x-text="t('filter.devices_hint')"></div>
 
           <label x-text="t('filter.os')"></label>
           <div class="flex gap-2 flex-wrap mb-4">
@@ -648,34 +732,32 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- ADVANCED -->
       <div x-show="editor.tab==='advanced'" class="space-y-4">
-        <div class="card p-4">
-          <div class="font-semibold text-sm mb-3" x-text="t('editor.group.antifraud')"></div>
-
-          <div class="flex items-center justify-between py-2">
-            <div>
+        <div class="card-soft p-4">
+          <div class="font-semibold text-sm mb-2" x-text="t('editor.group.antifraud')"></div>
+          <div class="flex items-center justify-between py-2.5">
+            <div class="flex-1 pr-4">
               <div class="text-sm font-medium" x-text="t('filter.require_js')"></div>
-              <div class="text-xs text-sub" x-text="t('filter.require_js_desc')"></div>
+              <div class="text-xs mt-0.5" style="color:var(--sub)" x-text="t('filter.require_js_desc')"></div>
             </div>
-            <label class="switch"><input type="checkbox" x-model="editor.data.require_js" :true-value="1" :false-value="0"><span class="slider"></span></label>
+            <label class="switch"><input type="checkbox" :checked="editor.data.require_js===1" @change="editor.data.require_js=$event.target.checked?1:0"><span class="slider"></span></label>
           </div>
-          <div class="flex items-center justify-between py-2">
-            <div>
+          <div class="flex items-center justify-between py-2.5">
+            <div class="flex-1 pr-4">
               <div class="text-sm font-medium" x-text="t('filter.require_referrer')"></div>
-              <div class="text-xs text-sub" x-text="t('filter.require_referrer_desc')"></div>
+              <div class="text-xs mt-0.5" style="color:var(--sub)" x-text="t('filter.require_referrer_desc')"></div>
             </div>
-            <label class="switch"><input type="checkbox" x-model="editor.data.require_referrer" :true-value="1" :false-value="0"><span class="slider"></span></label>
+            <label class="switch"><input type="checkbox" :checked="editor.data.require_referrer===1" @change="editor.data.require_referrer=$event.target.checked?1:0"><span class="slider"></span></label>
           </div>
         </div>
 
-        <div class="card p-4">
+        <div class="card-soft p-4">
           <div class="font-semibold text-sm mb-3" x-text="t('editor.group.ratelimit')"></div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label x-text="t('filter.limit_clicks')"></label>
               <input type="number" min="0" x-model.number="editor.data.limit_clicks_per_ip">
-              <div class="text-xs text-sub mt-1" x-text="t('filter.limit_clicks_hint')"></div>
+              <div class="text-xs mt-1" style="color:var(--sub)" x-text="t('filter.limit_clicks_hint')"></div>
             </div>
             <div>
               <label x-text="t('filter.limit_window')"></label>
@@ -684,26 +766,53 @@ tailwind.config = {
           </div>
         </div>
 
-        <div class="card p-4">
+        <div class="card-soft p-4">
           <div class="font-semibold text-sm mb-3" x-text="t('editor.group.blacklists')"></div>
           <label x-text="t('filter.blacklist_ips')"></label>
-          <textarea x-model="editor.data.blacklist_ips" placeholder="1.2.3.4&#10;5.6.7.8"></textarea>
+          <textarea x-model="editor.data.blacklist_ips" placeholder="1.2.3.4&#10;5.6.7.8" rows="4"></textarea>
           <label class="mt-3" x-text="t('filter.blacklist_ua')"></label>
-          <textarea x-model="editor.data.blacklist_ua" placeholder="curl&#10;wget"></textarea>
+          <textarea x-model="editor.data.blacklist_ua" placeholder="curl&#10;wget" rows="4"></textarea>
         </div>
       </div>
 
     </div>
 
-    <div class="p-6 border-t border-line flex justify-between items-center">
-      <div class="text-xs text-sub" x-show="editor.data.slug">
+    <div class="p-6 border-t flex justify-between items-center gap-3 flex-wrap" style="border-color:var(--line)">
+      <div class="text-xs min-w-0" x-show="editor.data.slug" style="color:var(--sub)">
         <span x-text="t('editor.link')"></span>:
-        <span class="font-mono text-ink" x-text="origin()+'/f/'+editor.data.slug"></span>
+        <span class="font-mono flex items-center gap-1" style="color:var(--ink)">
+          <span class="truncate" x-text="origin()+'/f/'+editor.data.slug"></span>
+          <button class="copy-btn" @click="copy(origin()+'/f/'+editor.data.slug)">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </button>
+        </span>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 ml-auto">
         <button class="btn btn-ghost" @click="editor.open=false" x-text="t('wizard.cancel')"></button>
-        <button class="btn btn-primary" @click="saveEditor()" x-text="t('actions.save')"></button>
+        <button class="btn btn-primary" @click="saveEditor()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <span x-text="t('actions.save')"></span>
+        </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CONFIRM ==================== -->
+<div x-show="confirmDlg.open" x-cloak class="fixed inset-0 modal-bg flex items-center justify-center p-6 z-50">
+  <div class="card p-6 w-full max-w-md">
+    <div class="flex gap-4 mb-4">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(239,68,68,.15);color:var(--bad)">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M4.062 19h15.876a2 2 0 001.731-3L13.732 4a2 2 0 00-3.464 0L2.33 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <div class="flex-1">
+        <h3 class="font-semibold text-lg mb-1" x-text="confirmDlg.title"></h3>
+        <p class="text-sm" style="color:var(--sub)" x-text="confirmDlg.message"></p>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button class="btn btn-ghost" @click="confirmDlg.open=false" x-text="t('wizard.cancel')"></button>
+      <button class="btn btn-danger" @click="confirmDlg.onOk?.();confirmDlg.open=false" x-text="confirmDlg.okText || t('actions.delete')"></button>
     </div>
   </div>
 </div>
@@ -718,23 +827,20 @@ function app() {
     token: '',
     tokenInput: '',
     lang: 'en',
+    theme: 'dark',
     tab: 'dashboard',
     rangeHours: 24,
+    refreshing: false,
 
-    // data
-    overview: {},
-    reasons: [],
-    countriesStats: [],
-    timeline: [],
-    flows: [],
-    visits: [],
-    visitsFilter: '',
+    overview: {}, reasons: [], countriesStats: [], timeline: [],
+    flows: [], visits: [], visitsFilter: '',
     allCountries: [],
 
-    wizard: { open: false, step: 1, data: {}, created: null },
-    editor: { open: false, tab: 'general', data: {} },
-    toast: '',
+    wizard: { open: false, step: 1, data: {}, created: null, countrySearch: '' },
+    editor: { open: false, tab: 'general', data: {}, countrySearch: '' },
+    confirmDlg: { open: false, title: '', message: '', okText: '', onOk: null },
 
+    toast: '',
     pollTimer: null,
 
     t(key) { return window.I18N[this.lang]?.[key] ?? window.I18N.en[key] ?? key; },
@@ -742,16 +848,25 @@ function app() {
 
     init() {
       this.lang = localStorage.getItem('cloakly_lang') || (navigator.language.startsWith('ru') ? 'ru' : 'en');
+      this.theme = localStorage.getItem('cloakly_theme') || 'dark';
+      this.applyTheme();
       const t = localStorage.getItem('cloakly_token');
       if (t) { this.token = t; this.authed = true; this.boot(); }
     },
+
     setLang(l) { this.lang = l; localStorage.setItem('cloakly_lang', l); },
+    toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; this.applyTheme(); localStorage.setItem('cloakly_theme', this.theme); this.$nextTick(() => this.drawChart()); },
+    applyTheme() { document.documentElement.setAttribute('data-theme', this.theme); },
+
     async boot() {
       const c = await this.api('/meta/countries');
       this.allCountries = c.rows || [];
       this.refresh();
       this.loadFlows();
-      this.pollTimer = setInterval(() => this.tab === 'dashboard' ? this.refresh() : null, 8000);
+      this.pollTimer = setInterval(() => {
+        if (this.tab === 'dashboard') this.refresh();
+        else if (this.tab === 'visits') this.loadVisits();
+      }, 8000);
     },
 
     login() {
@@ -776,77 +891,77 @@ function app() {
       return res.json();
     },
 
-    showToast(msg) { this.toast = msg; setTimeout(() => this.toast = '', 2200); },
+    showToast(msg) { this.toast = msg; clearTimeout(this._t); this._t = setTimeout(() => this.toast = '', 2200); },
     copy(text) { navigator.clipboard.writeText(text); this.showToast(this.t('actions.copied')); },
 
     async refresh() {
       if (!this.authed) return;
+      this.refreshing = true;
       const since = Date.now() - this.rangeHours * 3600 * 1000;
-      const [o, r, c, tl] = await Promise.all([
-        this.api('/stats/overview?since=' + since),
-        this.api('/stats/reasons?since=' + since),
-        this.api('/stats/countries?since=' + since),
-        this.api('/stats/timeline?hours=' + this.rangeHours),
-      ]);
-      this.overview = o || {};
-      this.reasons = r.rows || [];
-      this.countriesStats = c.rows || [];
-      this.timeline = tl.rows || [];
-      this.$nextTick(() => this.drawChart());
+      try {
+        const [o, r, c, tl] = await Promise.all([
+          this.api('/stats/overview?since=' + since),
+          this.api('/stats/reasons?since=' + since),
+          this.api('/stats/countries?since=' + since),
+          this.api('/stats/timeline?hours=' + this.rangeHours),
+        ]);
+        this.overview = o || {};
+        this.reasons = r.rows || [];
+        this.countriesStats = c.rows || [];
+        this.timeline = tl.rows || [];
+        this.$nextTick(() => this.drawChart());
+      } finally {
+        setTimeout(() => this.refreshing = false, 300);
+      }
     },
-    async loadFlows() {
-      const r = await this.api('/flows');
-      this.flows = r.rows || [];
-    },
+    async loadFlows() { const r = await this.api('/flows'); this.flows = r.rows || []; },
     async loadVisits() {
       const q = this.visitsFilter ? '?decision=' + this.visitsFilter : '';
       const r = await this.api('/visits' + q);
       this.visits = r.rows || [];
     },
 
-    // ----- stats helpers
-    passRate() { return this.overview.total ? Math.round((this.overview.real / this.overview.total) * 100) : 0; },
+    passRate()  { return this.overview.total ? Math.round((this.overview.real / this.overview.total) * 100) : 0; },
     blockRate() { return this.overview.total ? Math.round((this.overview.blocked / this.overview.total) * 100) : 0; },
-    reasonPct(c) {
-      const max = Math.max(1, ...this.reasons.map(r => r.count));
-      return Math.max(4, Math.round((c / max) * 100));
-    },
+    reasonPct(c) { const max = Math.max(1, ...this.reasons.map(r => r.count)); return Math.max(4, Math.round((c / max) * 100)); },
 
     drawChart() {
       const el = this.$refs.chart;
       if (!el) return;
       const w = el.clientWidth || 600, h = el.clientHeight || 200;
       if (!this.timeline.length) {
-        el.innerHTML = `<div class="text-sm text-sub flex items-center justify-center h-full">${this.t('empty.no_traffic')}</div>`;
+        el.innerHTML = `<div class="text-sm flex items-center justify-center h-full" style="color:var(--sub)">${this.t('empty.no_traffic')}</div>`;
         return;
       }
       const data = this.timeline;
       const max = Math.max(1, ...data.map(d => (d.real || 0) + (d.blocked || 0)));
-      const pad = 20;
+      const pad = 28;
       const bw = (w - pad * 2) / data.length;
+      const s = getComputedStyle(document.documentElement);
+      const goodC = s.getPropertyValue('--good').trim() || '#10b981';
+      const badC = s.getPropertyValue('--bad').trim() || '#ef4444';
+      const subC = s.getPropertyValue('--sub').trim() || '#8a93a6';
       let svg = '';
       data.forEach((d, i) => {
-        const real = d.real || 0, blocked = d.blocked || 0, tot = real + blocked;
+        const real = d.real || 0, blocked = d.blocked || 0;
         const x = pad + i * bw + 2;
-        const totalH = (tot / max) * (h - pad * 2);
         const realH = (real / max) * (h - pad * 2);
         const blockedH = (blocked / max) * (h - pad * 2);
-        const yTot = h - pad - totalH;
-        svg += `<rect x="${x}" y="${h - pad - blockedH}" width="${bw - 4}" height="${blockedH}" fill="#ef4444" opacity=".85" rx="3"/>`;
-        svg += `<rect x="${x}" y="${h - pad - blockedH - realH}" width="${bw - 4}" height="${realH}" fill="#10b981" opacity=".85" rx="3"/>`;
+        if (blockedH > 0) svg += `<rect x="${x}" y="${h - pad - blockedH}" width="${bw - 4}" height="${blockedH}" fill="${badC}" opacity=".9" rx="3"/>`;
+        if (realH > 0)    svg += `<rect x="${x}" y="${h - pad - blockedH - realH}" width="${bw - 4}" height="${realH}" fill="${goodC}" opacity=".9" rx="3"/>`;
       });
+      const step = Math.max(1, Math.ceil(data.length / 8));
       data.forEach((d, i) => {
-        if (data.length > 12 && i % 2 !== 0) return;
+        if (i % step !== 0) return;
         const x = pad + i * bw + bw / 2;
         const dt = new Date(d.t);
-        const bucketMs = Math.max(...data.map((_, j) => j > 0 ? data[j].t - data[j-1].t : 0)) || 3600000;
-        const label = bucketMs >= 24*3600000 ? `${dt.getDate()}/${dt.getMonth()+1}` : `${dt.getHours()}:00`;
-        svg += `<text x="${x}" y="${h - 4}" fill="#94a3b8" font-size="10" text-anchor="middle">${label}</text>`;
+        const bucketMs = data.length > 1 ? data[1].t - data[0].t : 3600000;
+        const label = bucketMs >= 24 * 3600000 ? `${dt.getDate()}/${dt.getMonth() + 1}` : `${String(dt.getHours()).padStart(2, '0')}:00`;
+        svg += `<text x="${x}" y="${h - 6}" fill="${subC}" font-size="10" text-anchor="middle">${label}</text>`;
       });
-      el.innerHTML = `<svg width="${w}" height="${h}" style="width:100%">${svg}</svg>`;
+      el.innerHTML = `<svg width="${w}" height="${h}" style="width:100%;display:block">${svg}</svg>`;
     },
 
-    // ----- visits
     fmtDate(ts) {
       const d = new Date(ts), now = new Date();
       const sameDay = d.toDateString() === now.toDateString();
@@ -858,15 +973,23 @@ function app() {
       const cat = r.split(':')[0];
       return this.t('reason.' + cat) || cat;
     },
-
-    // ----- chip multiselect helper
     toggleArr(obj, field, val) {
       if (!obj[field]) obj[field] = [];
       const i = obj[field].indexOf(val);
       if (i >= 0) obj[field].splice(i, 1); else obj[field].push(val);
     },
 
-    // ----- flow ops
+    filteredCountries() {
+      const q = (this.wizard.countrySearch || '').toLowerCase().trim();
+      if (!q) return this.allCountries;
+      return this.allCountries.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
+    },
+    filteredCountriesEditor() {
+      const q = (this.editor.countrySearch || '').toLowerCase().trim();
+      if (!q) return this.allCountries;
+      return this.allCountries.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
+    },
+
     async toggleFlow(flow) {
       const next = flow.status === 'active' ? 'paused' : 'active';
       await this.api('/flows/' + flow.id, { method: 'PUT', body: JSON.stringify({ status: next }) });
@@ -877,16 +1000,23 @@ function app() {
       this.showToast(this.t('toast.duplicated'));
       this.loadFlows();
     },
-    async deleteFlow(id) {
-      if (!confirm(this.t('confirm.delete'))) return;
-      await this.api('/flows/' + id, { method: 'DELETE' });
-      this.loadFlows();
+    deleteFlow(id) {
+      this.confirmDlg = {
+        open: true,
+        title: this.t('confirm.delete_title'),
+        message: this.t('confirm.delete_msg'),
+        okText: this.t('actions.delete'),
+        onOk: async () => {
+          await this.api('/flows/' + id, { method: 'DELETE' });
+          this.showToast(this.t('toast.deleted'));
+          this.loadFlows();
+        }
+      };
     },
 
-    // ----- wizard
     openWizard() {
       this.wizard = {
-        open: true, step: 1, created: null,
+        open: true, step: 1, created: null, countrySearch: '',
         data: {
           name: '', money_url: '', safe_url: '',
           block_bots: 1, block_datacenter: 1, block_vpn_proxy: 1,
@@ -910,15 +1040,10 @@ function app() {
         countries: JSON.stringify(d.countriesArr || []),
       };
       const r = await this.api('/flows', { method: 'POST', body: JSON.stringify(body) });
-      if (r.ok) {
-        this.wizard.created = { id: r.id, slug: r.slug };
-        this.wizard.step = 3;
-      } else {
-        this.showToast(r.error || 'Error');
-      }
+      if (r.ok) { this.wizard.created = { id: r.id, slug: r.slug }; this.wizard.step = 3; }
+      else { this.showToast(r.error || 'Error'); }
     },
 
-    // ----- editor
     openEditor(flow) {
       const d = { ...flow };
       d.countriesArr = this.parseJson(d.countries);
@@ -926,9 +1051,10 @@ function app() {
       d.osArr = this.parseJson(d.os_list);
       d.browsersArr = this.parseJson(d.browsers);
       d.languagesArr = this.parseJson(d.languages);
-      this.editor = { open: true, tab: 'general', data: d };
+      this.editor = { open: true, tab: 'general', data: d, countrySearch: '' };
     },
     parseJson(s) { try { const v = JSON.parse(s || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } },
+
     async saveEditor() {
       const d = this.editor.data;
       const body = { ...d };
@@ -943,13 +1069,8 @@ function app() {
       delete body.id; delete body.created_at; delete body.updated_at;
 
       const r = await this.api('/flows/' + d.id, { method: 'PUT', body: JSON.stringify(body) });
-      if (r.ok) {
-        this.editor.open = false;
-        this.showToast(this.t('toast.saved'));
-        this.loadFlows();
-      } else {
-        this.showToast(r.error || 'Error');
-      }
+      if (r.ok) { this.editor.open = false; this.showToast(this.t('toast.saved')); this.loadFlows(); }
+      else { this.showToast(r.error || 'Error'); }
     },
   }
 }

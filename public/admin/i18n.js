@@ -2,6 +2,7 @@ window.I18N = {
   en: {
     'app.tagline': 'Traffic cloaker',
     'app.logout': 'Log out',
+    'theme.toggle': 'Toggle theme',
 
     'login.subtitle': 'Sign in to your dashboard',
     'login.token': 'Admin token',
@@ -19,6 +20,7 @@ window.I18N = {
     'range.30d': 'Last 30 days',
 
     'dash.title': 'Overview',
+    'dash.subtitle': 'A quick snapshot of your traffic.',
     'dash.timeline': 'Traffic timeline',
     'dash.reasons': 'Why visitors are blocked',
     'dash.top_countries': 'Top countries',
@@ -35,6 +37,7 @@ window.I18N = {
     'flows.title': 'Flows',
     'flows.subtitle': 'Each flow has its own link and filter rules.',
     'flows.create': 'Create flow',
+    'flows.create_first': 'Create your first flow',
     'flows.empty_title': 'No flows yet',
     'flows.empty_desc': 'A flow is a URL that checks visitors and sends real users to your offer and bots to a safe page.',
     'flows.domain': 'Custom domain',
@@ -51,11 +54,15 @@ window.I18N = {
     'actions.copied': 'Copied!',
 
     'confirm.delete': 'Delete this flow? All its stats will be removed.',
+    'confirm.delete_title': 'Delete this flow?',
+    'confirm.delete_msg': 'This will also remove all visitor stats for this flow. You cannot undo this.',
 
     'toast.saved': 'Saved',
     'toast.duplicated': 'Flow duplicated',
+    'toast.deleted': 'Deleted',
 
     'visits.title': 'Visitor log',
+    'visits.subtitle': 'Every visit that went through your flows.',
     'visits.all': 'All visitors',
     'visits.passed_only': 'Passed only',
     'visits.blocked_only': 'Blocked only',
@@ -70,12 +77,14 @@ window.I18N = {
 
     'empty.no_blocks': 'No blocked visitors yet.',
     'empty.no_traffic': 'No traffic yet.',
-    'empty.no_visits': 'No visitors yet. Share your flow link to get started.',
+    'empty.no_visits': 'Share your flow link to start seeing traffic here.',
+    'empty.no_visits_title': 'No visitors yet',
 
     'wizard.title': 'Create a new flow',
-    'wizard.step1': 'Step 1. Destinations',
-    'wizard.step2': 'Step 2. Filters',
-    'wizard.step3': 'Step 3. Done',
+    'wizard.intro': 'A flow is a link you put in your ads. We decide who gets your offer and who sees a safe page.',
+    'wizard.step1': 'Destinations',
+    'wizard.step2': 'Filters',
+    'wizard.step3': 'Done',
     'wizard.name': 'Flow name',
     'wizard.name_placeholder': 'My Facebook campaign',
     'wizard.name_hint': 'A short name to help you recognize it.',
@@ -87,6 +96,8 @@ window.I18N = {
     'wizard.filters_hint': 'Turn on the filters you want. Anyone caught by them will see the safe page.',
     'wizard.countries_mode': 'Countries',
     'wizard.countries_list': 'Select countries',
+    'wizard.country_search': 'Search country…',
+    'wizard.selected': 'selected',
     'wizard.back': 'Back',
     'wizard.next': 'Next',
     'wizard.create': 'Create flow',
@@ -178,6 +189,7 @@ window.I18N = {
   ru: {
     'app.tagline': 'Клоакер трафика',
     'app.logout': 'Выйти',
+    'theme.toggle': 'Сменить тему',
 
     'login.subtitle': 'Войдите в панель управления',
     'login.token': 'Админ-токен',
@@ -195,6 +207,7 @@ window.I18N = {
     'range.30d': 'За 30 дней',
 
     'dash.title': 'Обзор',
+    'dash.subtitle': 'Краткая сводка по вашему трафику.',
     'dash.timeline': 'График трафика',
     'dash.reasons': 'Причины блокировок',
     'dash.top_countries': 'Топ стран',
@@ -211,6 +224,7 @@ window.I18N = {
     'flows.title': 'Потоки',
     'flows.subtitle': 'У каждого потока своя ссылка и свои фильтры.',
     'flows.create': 'Создать поток',
+    'flows.create_first': 'Создать первый поток',
     'flows.empty_title': 'Пока нет ни одного потока',
     'flows.empty_desc': 'Поток — это ссылка, которая проверяет посетителя и отправляет живых людей на оффер, а ботов — на белую страницу.',
     'flows.domain': 'Домен',
@@ -227,11 +241,15 @@ window.I18N = {
     'actions.copied': 'Скопировано!',
 
     'confirm.delete': 'Удалить поток? Вся его статистика тоже удалится.',
+    'confirm.delete_title': 'Удалить поток?',
+    'confirm.delete_msg': 'Это также удалит всю статистику посетителей этого потока. Отменить нельзя.',
 
     'toast.saved': 'Сохранено',
     'toast.duplicated': 'Поток дублирован',
+    'toast.deleted': 'Удалено',
 
     'visits.title': 'Журнал посетителей',
+    'visits.subtitle': 'Каждое посещение, прошедшее через ваши потоки.',
     'visits.all': 'Все посетители',
     'visits.passed_only': 'Только реальные',
     'visits.blocked_only': 'Только боты',
@@ -246,12 +264,14 @@ window.I18N = {
 
     'empty.no_blocks': 'Пока нет заблокированных.',
     'empty.no_traffic': 'Пока нет трафика.',
-    'empty.no_visits': 'Пока нет посетителей. Поделитесь ссылкой потока, чтобы начать.',
+    'empty.no_visits': 'Поделитесь ссылкой потока, чтобы увидеть трафик здесь.',
+    'empty.no_visits_title': 'Пока нет посетителей',
 
     'wizard.title': 'Новый поток',
-    'wizard.step1': 'Шаг 1. Страницы',
-    'wizard.step2': 'Шаг 2. Фильтры',
-    'wizard.step3': 'Шаг 3. Готово',
+    'wizard.intro': 'Поток — это ссылка, которую вы ставите в рекламу. Мы сами решим, кому показать ваш оффер, а кому — белую страницу.',
+    'wizard.step1': 'Страницы',
+    'wizard.step2': 'Фильтры',
+    'wizard.step3': 'Готово',
     'wizard.name': 'Название потока',
     'wizard.name_placeholder': 'Моя кампания в Facebook',
     'wizard.name_hint': 'Короткое название, чтобы вам было удобно ориентироваться.',
@@ -263,6 +283,8 @@ window.I18N = {
     'wizard.filters_hint': 'Включите нужные фильтры. Кого они отсеют — увидят белую страницу.',
     'wizard.countries_mode': 'Страны',
     'wizard.countries_list': 'Выберите страны',
+    'wizard.country_search': 'Поиск страны…',
+    'wizard.selected': 'выбрано',
     'wizard.back': 'Назад',
     'wizard.next': 'Далее',
     'wizard.create': 'Создать',
