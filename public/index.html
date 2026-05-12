@@ -3,162 +3,209 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AdTrack - Modern Ad Tracker with Built-in Cloaker</title>
-<meta name="description" content="A zero-bloat, self-hosted tracker for paid traffic. Cloaker, landings and dashboard, all in one file.">
+<title>Cloakly — Traffic cloaker with a real dashboard</title>
+<meta name="description" content="Self-hosted traffic cloaker. Simple flows, clean dashboard, all the filters that matter.">
 <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  body{background:#0b0f17;color:#e5e9f0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
-  .grad{background:radial-gradient(1200px 600px at 80% -10%,rgba(79,140,255,.25),transparent),radial-gradient(900px 500px at -10% 40%,rgba(34,197,94,.18),transparent)}
-  .card{background:rgba(18,24,38,.8);border:1px solid #232b3d;border-radius:16px;backdrop-filter:blur(8px)}
-  .chip{display:inline-block;padding:4px 10px;border:1px solid #232b3d;border-radius:999px;color:#8a93a6;font-size:12px}
-  .kbd{background:#1a2233;border:1px solid #232b3d;padding:2px 6px;border-radius:6px;font-family:ui-monospace,monospace;font-size:12px;color:#e5e9f0}
-  a.btn-p{background:#4f8cff;color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;display:inline-block}
-  a.btn-s{border:1px solid #232b3d;color:#e5e9f0;padding:12px 20px;border-radius:10px;font-weight:500;text-decoration:none;display:inline-block}
-  a.btn-p:hover{filter:brightness(1.1)}
-  a.btn-s:hover{background:#1a2233}
-  .code{background:#0b0f17;border:1px solid #232b3d;border-radius:10px;padding:16px;font-family:ui-monospace,monospace;font-size:13px;color:#8ab4ff;overflow:auto}
-  .feature-ic{width:40px;height:40px;border-radius:10px;background:rgba(79,140,255,.15);color:#4f8cff;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+  body{font-family:'Inter',system-ui,sans-serif;background:#0b0f1a;color:#e5e7eb}
+  .grad{background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(99,102,241,.25), transparent),
+    radial-gradient(900px 500px at -10% 40%, rgba(16,185,129,.18), transparent)}
+  .card{background:rgba(20,25,40,.8);border:1px solid rgba(255,255,255,.08);border-radius:18px;backdrop-filter:blur(8px)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:11px 20px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:all .15s}
+  .btn-p{background:#6366f1;color:#fff}
+  .btn-p:hover{background:#4f46e5}
+  .btn-s{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.1)}
+  .btn-s:hover{background:rgba(255,255,255,.12)}
+  .chip{display:inline-block;padding:5px 12px;border:1px solid rgba(255,255,255,.1);border-radius:999px;color:#94a3b8;font-size:12px;font-weight:500}
+  .feat{background:rgba(20,25,40,.5);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:22px}
+  .feat-ic{width:42px;height:42px;border-radius:10px;background:rgba(99,102,241,.18);color:#a5b4fc;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  [data-lang]{display:none}
+  html[lang="en"] [data-lang="en"]{display:initial}
+  html[lang="ru"] [data-lang="ru"]{display:initial}
 </style>
 </head>
 <body class="grad">
 
-<!-- nav -->
+<!-- NAV -->
 <nav class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
   <div class="flex items-center gap-3">
-    <div class="w-9 h-9 rounded-lg bg-[#4f8cff] flex items-center justify-center font-bold">A</div>
-    <div class="font-semibold">AdTrack</div>
+    <div class="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-white">C</div>
+    <div class="font-bold text-white">Cloakly</div>
   </div>
   <div class="flex items-center gap-4 text-sm">
-    <a href="#features" class="text-[#8a93a6] hover:text-white">Features</a>
-    <a href="#how" class="text-[#8a93a6] hover:text-white">How it works</a>
-    <a href="#start" class="text-[#8a93a6] hover:text-white">Get started</a>
-    <a href="/admin" class="btn-p">Open dashboard</a>
+    <div class="flex gap-1 mr-2">
+      <button class="chip" id="lang-en">EN</button>
+      <button class="chip" id="lang-ru">RU</button>
+    </div>
+    <a href="#features" class="text-slate-400 hover:text-white" data-lang="en">Features</a>
+    <a href="#features" class="text-slate-400 hover:text-white" data-lang="ru">Возможности</a>
+    <a href="#install" class="text-slate-400 hover:text-white" data-lang="en">Install</a>
+    <a href="#install" class="text-slate-400 hover:text-white" data-lang="ru">Установка</a>
+    <a href="/admin" class="btn btn-p" data-lang="en">Open dashboard</a>
+    <a href="/admin" class="btn btn-p" data-lang="ru">Открыть панель</a>
   </div>
 </nav>
 
-<!-- hero -->
-<section class="max-w-6xl mx-auto px-6 pt-16 pb-20 text-center">
-  <span class="chip">v1.0 &middot; self-hosted &middot; MIT</span>
-  <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mt-6 leading-[1.05]">
-    The ad tracker that<br>
-    <span class="bg-clip-text text-transparent bg-gradient-to-r from-[#4f8cff] to-[#22c55e]">cuts the bloat.</span>
+<!-- HERO -->
+<section class="max-w-5xl mx-auto px-6 pt-12 pb-16 text-center">
+  <span class="chip">v2.0 • self-hosted • MIT</span>
+  <h1 class="text-5xl md:text-6xl font-black tracking-tight mt-6 leading-[1.05] text-white">
+    <span data-lang="en">The cloaker built like<br>a real product.</span>
+    <span data-lang="ru">Клоакер, сделанный<br>как нормальный сервис.</span>
   </h1>
-  <p class="text-lg text-[#8a93a6] mt-6 max-w-2xl mx-auto">
-    Click tracking, bot cloaking, landing pages and a live dashboard &mdash; in a single Node process.
-    No Docker, no Redis, no BS. Install in 30 seconds.
+  <p class="text-lg text-slate-400 mt-6 max-w-2xl mx-auto">
+    <span data-lang="en">Create a flow, get a link, show it to your audience. Real visitors go to the offer, bots see a safe page. That's it.</span>
+    <span data-lang="ru">Создаёте поток, получаете ссылку, льёте на неё трафик. Живые люди идут на оффер, боты — на белую страницу. Всё.</span>
   </p>
   <div class="mt-8 flex items-center justify-center gap-3">
-    <a href="/admin" class="btn-p">Open dashboard &rarr;</a>
-    <a href="#start" class="btn-s">How to install</a>
+    <a href="/admin" class="btn btn-p">
+      <span data-lang="en">Go to dashboard →</span>
+      <span data-lang="ru">В панель управления →</span>
+    </a>
+    <a href="#install" class="btn btn-s">
+      <span data-lang="en">How to install</span>
+      <span data-lang="ru">Как установить</span>
+    </a>
   </div>
 
-  <!-- Dashboard preview -->
+  <!-- preview mockup -->
   <div class="mt-16 card p-4 mx-auto max-w-4xl text-left">
     <div class="flex items-center gap-2 mb-3">
-      <span class="w-3 h-3 rounded-full bg-[#ef4444]"></span>
-      <span class="w-3 h-3 rounded-full bg-[#f59e0b]"></span>
-      <span class="w-3 h-3 rounded-full bg-[#22c55e]"></span>
-      <span class="ml-2 text-xs text-[#8a93a6]">adtrack.local/admin</span>
+      <span class="w-3 h-3 rounded-full bg-red-500"></span>
+      <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+      <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+      <span class="ml-2 text-xs text-slate-500">cloakly.local/admin</span>
     </div>
-    <div class="grid grid-cols-5 gap-2 mb-3">
-      <div class="card p-3"><div class="text-xs text-[#8a93a6]">CLICKS</div><div class="text-xl font-bold">1,284</div></div>
-      <div class="card p-3"><div class="text-xs text-[#8a93a6]">CLOAKED</div><div class="text-xl font-bold text-[#f59e0b]">342</div></div>
-      <div class="card p-3"><div class="text-xs text-[#8a93a6]">CONV</div><div class="text-xl font-bold text-[#22c55e]">87</div></div>
-      <div class="card p-3"><div class="text-xs text-[#8a93a6]">REVENUE</div><div class="text-xl font-bold text-[#22c55e]">$2,175</div></div>
-      <div class="card p-3"><div class="text-xs text-[#8a93a6]">ROI</div><div class="text-xl font-bold text-[#22c55e]">+216%</div></div>
+    <div class="grid grid-cols-4 gap-2 mb-3">
+      <div class="card p-3"><div class="text-xs text-slate-500">VISITORS</div><div class="text-2xl font-bold text-white">1,847</div></div>
+      <div class="card p-3"><div class="text-xs text-slate-500">PASSED</div><div class="text-2xl font-bold text-emerald-400">1,402</div></div>
+      <div class="card p-3"><div class="text-xs text-slate-500">BLOCKED</div><div class="text-2xl font-bold text-red-400">445</div></div>
+      <div class="card p-3"><div class="text-xs text-slate-500">PASS RATE</div><div class="text-2xl font-bold text-white">76%</div></div>
     </div>
-    <div class="card p-3 h-28 flex items-end gap-1">
-      <template id="bars"></template>
-    </div>
+    <div class="card p-3 h-32 flex items-end gap-1" id="bars"></div>
   </div>
 </section>
 
-<!-- features -->
+<!-- FEATURES -->
 <section id="features" class="max-w-6xl mx-auto px-6 py-16">
-  <h2 class="text-3xl font-bold mb-2 text-center">Everything a tracker needs. Nothing it doesn't.</h2>
-  <p class="text-[#8a93a6] text-center mb-12">The essentials of tracking platforms and cloakers, distilled into one clean tool.</p>
+  <h2 class="text-3xl font-bold mb-3 text-center text-white">
+    <span data-lang="en">Everything a cloaker needs. Nothing it doesn't.</span>
+    <span data-lang="ru">Всё, что нужно клоакеру. И ничего лишнего.</span>
+  </h2>
+  <p class="text-slate-400 text-center mb-12 max-w-2xl mx-auto">
+    <span data-lang="en">Modeled after the best modern cloakers — but open source, self-hosted and free.</span>
+    <span data-lang="ru">Сделано по образу лучших современных клоакеров, но opensource, на вашем сервере и бесплатно.</span>
+  </p>
 
   <div class="grid md:grid-cols-3 gap-4">
-    <div class="card p-6"><div class="feature-ic">&#127919;</div><h3 class="font-semibold mb-1">Click tracking</h3><p class="text-sm text-[#8a93a6]">Nanoid click IDs, cost per click/mile/action, sub1-sub5 passthrough, full macro support in offer URLs.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#128737;</div><h3 class="font-semibold mb-1">Smart cloaker</h3><p class="text-sm text-[#8a93a6]">Blocks crawlers, datacenter ASNs, bad UAs, headless browsers, wrong geo &mdash; 11 signals out of the box.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#127758;</div><h3 class="font-semibold mb-1">Geo targeting</h3><p class="text-sm text-[#8a93a6]">Allow/block countries via Cloudflare or custom headers. Per-campaign rules.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#128196;</div><h3 class="font-semibold mb-1">White + prelanders</h3><p class="text-sm text-[#8a93a6]">Drop HTML files in /landings. Use <span class="kbd">{{goUrl}}</span>, <span class="kbd">{{clickid}}</span> macros.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#128268;</div><h3 class="font-semibold mb-1">S2S postback</h3><p class="text-sm text-[#8a93a6]">Server-to-server conversion tracking compatible with any affiliate network.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#128202;</div><h3 class="font-semibold mb-1">Live dashboard</h3><p class="text-sm text-[#8a93a6]">KPIs, timeline chart, per-campaign breakdown and real-time click feed with auto-refresh.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#9881;</div><h3 class="font-semibold mb-1">Zero config</h3><p class="text-sm text-[#8a93a6]">SQLite file, no Redis, no Docker. Runs on a $5 VPS handling millions of clicks.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#128293;</div><h3 class="font-semibold mb-1">Fast redirects</h3><p class="text-sm text-[#8a93a6]">~5ms overhead per click with prepared statements and WAL journaling.</p></div>
-    <div class="card p-6"><div class="feature-ic">&#128231;</div><h3 class="font-semibold mb-1">JS pixel ping</h3><p class="text-sm text-[#8a93a6]">Landing pages can fire engagement pings so you can filter out non-browsers post-click.</p></div>
-  </div>
-</section>
-
-<!-- how it works -->
-<section id="how" class="max-w-6xl mx-auto px-6 py-16">
-  <h2 class="text-3xl font-bold mb-2 text-center">How it works</h2>
-  <p class="text-[#8a93a6] text-center mb-10">One URL &rarr; cloaker decides &rarr; visitor lands on the right page.</p>
-
-  <div class="card p-8">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-      <div class="text-center">
-        <div class="text-4xl mb-2">&#128187;</div>
-        <div class="font-semibold">Ad click</div>
-        <div class="text-xs text-[#8a93a6]">/t/:slug?sub1=...</div>
-      </div>
-      <div class="text-[#4f8cff]">&rarr;</div>
-      <div class="text-center">
-        <div class="text-4xl mb-2">&#128737;</div>
-        <div class="font-semibold">Cloaker</div>
-        <div class="text-xs text-[#8a93a6]">UA / IP / ASN / Geo / UA</div>
-      </div>
-      <div class="text-[#4f8cff]">&rarr;</div>
-      <div class="text-center">
-        <div class="text-4xl mb-2">&#129534;</div>
-        <div class="font-semibold">Route</div>
-        <div class="text-xs text-[#8a93a6]">white / prelander / offer</div>
-      </div>
-      <div class="text-[#4f8cff]">&rarr;</div>
-      <div class="text-center">
-        <div class="text-4xl mb-2">&#128176;</div>
-        <div class="font-semibold">Conversion</div>
-        <div class="text-xs text-[#8a93a6]">/postback?clickid=...</div>
-      </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">⚡</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">3-step flow wizard</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Мастер создания за 3 шага</h3>
+      <p class="text-sm text-slate-400" data-lang="en">Name → destinations → filters. New flow in 30 seconds.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Название → страницы → фильтры. Новый поток за 30 секунд.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">🤖</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">Bot protection</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Защита от ботов</h3>
+      <p class="text-sm text-slate-400" data-lang="en">Blocks crawlers, datacenter IPs, VPNs, headless browsers — all toggleable.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Блокирует краулеров, IP дата-центров, VPN и headless-браузеры — всё переключателями.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">🌍</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">Targeting</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Таргетинг</h3>
+      <p class="text-sm text-slate-400" data-lang="en">Country, device, OS, browser, language, time-of-day — pick what you need.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Страна, устройство, ОС, браузер, язык, время суток — выбирайте нужное.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">📊</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">Real dashboard</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Настоящая статистика</h3>
+      <p class="text-sm text-slate-400" data-lang="en">Live visitor feed, traffic chart, block reasons breakdown, country stats.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Лента посетителей, график трафика, разбор причин блокировок, статистика по странам.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">🔗</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">Custom domains</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Свои домены</h3>
+      <p class="text-sm text-slate-400" data-lang="en">Point any domain to your server, attach it to a flow. No nginx config needed.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Направляете A-запись на сервер, привязываете домен к потоку. Никакого nginx не нужно.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">🌐</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">Bilingual UI</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Двуязычный интерфейс</h3>
+      <p class="text-sm text-slate-400" data-lang="en">Dashboard in English and Russian. Switches with one click.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Панель на русском и английском. Переключается одним кликом.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">🛡️</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">Anti-fraud</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Анти-фрод</h3>
+      <p class="text-sm text-slate-400" data-lang="en">JS challenge, referrer check, per-IP rate limits, custom blacklists.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">JS-проверка, проверка referrer, лимиты по IP, свои чёрные списки.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">📦</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">Zero dependencies</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Без лишних зависимостей</h3>
+      <p class="text-sm text-slate-400" data-lang="en">SQLite file, no Docker, no Redis. Handles millions of hits on a $5 VPS.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Файл SQLite. Ни Docker, ни Redis. Тянет миллионы запросов на VPS за $5.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic text-xl">🔒</div>
+      <h3 class="font-semibold mb-1 text-white" data-lang="en">You own it</h3>
+      <h3 class="font-semibold mb-1 text-white" data-lang="ru">Ваш и только ваш</h3>
+      <p class="text-sm text-slate-400" data-lang="en">Your server, your data, your domains. No monthly fees, no telemetry.</p>
+      <p class="text-sm text-slate-400" data-lang="ru">Свой сервер, свои данные, свои домены. Без подписок и телеметрии.</p>
     </div>
   </div>
 </section>
 
-<!-- install -->
-<section id="start" class="max-w-4xl mx-auto px-6 py-16">
-  <h2 class="text-3xl font-bold mb-2 text-center">Get started in 30 seconds</h2>
-  <p class="text-[#8a93a6] text-center mb-10">Run the following and open the dashboard.</p>
-
-  <div class="code"><pre>git clone &lt;this-repo&gt; adtrack
-cd adtrack
-npm install
-npm run seed        <span style="color:#8a93a6"># creates a demo campaign</span>
-npm start           <span style="color:#8a93a6"># open http://localhost:3000</span></pre></div>
-
-  <p class="text-sm text-[#8a93a6] mt-6 text-center">
-    Then test the tracker: <a href="/t/demo" class="text-[#4f8cff] underline">/t/demo</a>
-    &middot; Open <a href="/admin" class="text-[#4f8cff] underline">/admin</a> (token <span class="kbd">admin</span>)
+<!-- INSTALL -->
+<section id="install" class="max-w-3xl mx-auto px-6 py-16">
+  <h2 class="text-3xl font-bold mb-3 text-center text-white">
+    <span data-lang="en">One-command install</span>
+    <span data-lang="ru">Установка одной командой</span>
+  </h2>
+  <p class="text-slate-400 text-center mb-8">
+    <span data-lang="en">Fresh Ubuntu / Debian / Rocky server. SSH in and paste this:</span>
+    <span data-lang="ru">Чистый сервер Ubuntu / Debian / Rocky. Зайдите по SSH и вставьте:</span>
+  </p>
+  <div class="card p-5 font-mono text-sm overflow-auto" style="background:rgba(0,0,0,.3)">
+    <pre style="color:#a5b4fc">curl -fsSL https://raw.githubusercontent.com/Fhshjsvxhd/test/main/install.sh | sudo bash</pre>
+  </div>
+  <p class="text-xs text-slate-500 mt-3 text-center">
+    <span data-lang="en">Dashboard will be at http://YOUR_IP/admin — token is printed at the end of install.</span>
+    <span data-lang="ru">Панель будет на http://ВАШ_IP/admin — токен напечатается в конце установки.</span>
   </p>
 </section>
 
-<footer class="border-t border-[#232b3d] mt-20">
-  <div class="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-[#8a93a6]">
-    <div>AdTrack &middot; self-hosted ad tracker</div>
-    <div class="flex gap-4">
-      <a href="/admin" class="hover:text-white">Dashboard</a>
-      <a href="https://github.com" class="hover:text-white">GitHub</a>
-    </div>
+<footer class="border-t border-white/5 mt-16">
+  <div class="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-slate-500">
+    <div>Cloakly · MIT License</div>
+    <a href="/admin" class="hover:text-white">Dashboard →</a>
   </div>
 </footer>
 
 <script>
-  // decorative bars for hero preview
-  const bars = document.querySelector('.card.h-28');
-  if (bars) {
-    const h = [32,48,26,60,42,70,55,80,64,92,58,72,48,66,78];
-    bars.innerHTML = h.map((v,i)=>`<div style="flex:1;background:linear-gradient(180deg,#4f8cff,#1e3a8a);border-radius:3px;height:${v}%;opacity:${0.6+i*0.025}"></div>`).join('');
-  }
+  // language
+  function setLang(l) { document.documentElement.setAttribute('lang', l); localStorage.setItem('cl_lang', l); }
+  setLang(localStorage.getItem('cl_lang') || (navigator.language.startsWith('ru') ? 'ru' : 'en'));
+  document.getElementById('lang-en').onclick = () => setLang('en');
+  document.getElementById('lang-ru').onclick = () => setLang('ru');
+
+  // decorative bars
+  const heights = [30,45,28,58,42,70,52,82,64,92,58,72,48,66,78,88,60,74];
+  const colors = [['#10b981',.9],['#ef4444',.6]];
+  document.getElementById('bars').innerHTML = heights.map((v,i)=>{
+    const [c] = colors[i%2];
+    return `<div style="flex:1;background:linear-gradient(180deg,${c},${c}99);border-radius:3px;height:${v}%;opacity:${0.55 + i*0.02}"></div>`;
+  }).join('');
 </script>
 </body>
 </html>

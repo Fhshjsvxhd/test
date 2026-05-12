@@ -1,47 +1,45 @@
 #!/usr/bin/env bash
-# AdTrack one-line installer
+# Cloakly one-line installer
 # Usage:  curl -fsSL https://raw.githubusercontent.com/Fhshjsvxhd/test/main/install.sh | sudo bash
 # or:     sudo bash install.sh
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/Fhshjsvxhd/test.git}"
-INSTALL_DIR="${INSTALL_DIR:-/opt/adtrack}"
-SERVICE_USER="${SERVICE_USER:-adtrack}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/cloakly}"
+SERVICE_USER="${SERVICE_USER:-cloakly}"
 PORT="${PORT:-80}"
 BRANCH="${BRANCH:-main}"
 
-C_GREEN="\033[32m"; C_BLUE="\033[34m"; C_YELLOW="\033[33m"; C_RED="\033[31m"; C_RESET="\033[0m"
-step()  { echo -e "\n${C_BLUE}==>${C_RESET} $*"; }
-ok()    { echo -e "${C_GREEN}[OK]${C_RESET} $*"; }
-warn()  { echo -e "${C_YELLOW}[!!]${C_RESET} $*"; }
-die()   { echo -e "${C_RED}[XX]${C_RESET} $*" >&2; exit 1; }
+GRN="\033[32m"; BLU="\033[34m"; YLW="\033[33m"; RED="\033[31m"; RST="\033[0m"
+step()  { echo -e "\n${BLU}==>${RST} $*"; }
+ok()    { echo -e "${GRN}[OK]${RST} $*"; }
+warn()  { echo -e "${YLW}[!!]${RST} $*"; }
+die()   { echo -e "${RED}[XX]${RST} $*" >&2; exit 1; }
 
 [ "$EUID" -eq 0 ] || die "Run as root:  sudo bash install.sh"
 
-# ---------- detect package manager ----------
-if   command -v apt-get >/dev/null 2>&1; then PM=apt
-elif command -v dnf     >/dev/null 2>&1; then PM=dnf
-elif command -v yum     >/dev/null 2>&1; then PM=yum
-else die "Unsupported distro (need apt/dnf/yum). Use Ubuntu, Debian, Rocky or AlmaLinux."
+# detect package manager
+if   command -v apt-get >/dev/null; then PM=apt
+elif command -v dnf     >/dev/null; then PM=dnf
+elif command -v yum     >/dev/null; then PM=yum
+else die "Unsupported distro (need apt/dnf/yum)"
 fi
-ok "Detected package manager: $PM"
+ok "Package manager: $PM"
 
-# ---------- install prerequisites ----------
-step "Installing prerequisites (curl, git, build tools)"
+step "Installing prerequisites"
 if [ "$PM" = "apt" ]; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -y
-  apt-get install -y curl git ca-certificates build-essential python3 ufw sqlite3
+  apt-get install -y curl git ca-certificates build-essential python3 ufw sqlite3 libcap2-bin
 else
-  $PM install -y curl git ca-certificates gcc-c++ make python3 sqlite
+  $PM install -y curl git ca-certificates gcc-c++ make python3 sqlite libcap
 fi
 
-# ---------- install Node.js 20 if missing ----------
-step "Ensuring Node.js 20+ is installed"
+step "Ensuring Node.js 20+"
 NODE_OK=0
-if command -v node >/dev/null 2>&1; then
-  NODE_MAJOR=$(node -v | sed -E 's/v([0-9]+).*/\1/')
-  [ "$NODE_MAJOR" -ge 18 ] && NODE_OK=1
+if command -v node >/dev/null; then
+  NV=$(node -v | sed -E 's/v([0-9]+).*/\1/')
+  [ "$NV" -ge 18 ] && NODE_OK=1
 fi
 if [ "$NODE_OK" -eq 0 ]; then
   if [ "$PM" = "apt" ]; then
@@ -54,21 +52,15 @@ if [ "$NODE_OK" -eq 0 ]; then
 fi
 ok "Node $(node -v) / npm $(npm -v)"
 
-# ---------- install PM2 globally ----------
-step "Installing PM2 process manager"
+step "Installing PM2"
 npm install -g pm2 --silent
 
-# ---------- create service user ----------
 if ! id "$SERVICE_USER" >/dev/null 2>&1; then
-  step "Creating system user '$SERVICE_USER'"
+  step "Creating user '$SERVICE_USER'"
   useradd --system --create-home --shell /bin/bash "$SERVICE_USER"
 fi
 
-# ---------- clone / update repo ----------
-step "Installing AdTrack into $INSTALL_DIR"
-
-# If the script is being run from an already-cloned directory (e.g. private repo
-# cloned manually), use that directory as the source rather than re-cloning.
+step "Installing Cloakly into $INSTALL_DIR"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$SCRIPT_DIR/package.json" ] && [ -d "$SCRIPT_DIR/src" ]; then
   if [ "$SCRIPT_DIR" != "$INSTALL_DIR" ]; then
@@ -89,11 +81,9 @@ else
 fi
 chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 
-# ---------- install deps ----------
-step "Running npm install (this may take a minute)"
+step "Running npm install"
 sudo -u "$SERVICE_USER" -H bash -lc "cd '$INSTALL_DIR' && npm install --omit=dev --no-audit --no-fund"
 
-# ---------- create .env if missing ----------
 ENV_FILE="$INSTALL_DIR/.env"
 if [ ! -f "$ENV_FILE" ]; then
   step "Generating .env with a random admin token"
@@ -101,7 +91,7 @@ if [ ! -f "$ENV_FILE" ]; then
   cat > "$ENV_FILE" <<EOF
 PORT=$PORT
 ADMIN_TOKEN=$ADMIN_TOKEN
-DB_PATH=$INSTALL_DIR/data/adtrack.db
+DB_PATH=$INSTALL_DIR/data/cloakly.db
 TRUST_PROXY=1
 EOF
   chown "$SERVICE_USER:$SERVICE_USER" "$ENV_FILE"
@@ -111,58 +101,44 @@ else
   ADMIN_TOKEN=$(grep -E '^ADMIN_TOKEN=' "$ENV_FILE" | cut -d= -f2-)
 fi
 
-# ---------- seed demo data (only on first install) ----------
-if [ ! -f "$INSTALL_DIR/data/adtrack.db" ]; then
-  step "Seeding demo campaign"
-  sudo -u "$SERVICE_USER" -H bash -lc "cd '$INSTALL_DIR' && npm run seed" || true
-fi
-
-# ---------- allow binding to port 80 without root ----------
 if [ "$PORT" -lt 1024 ]; then
   step "Granting Node.js permission to bind to port $PORT"
   NODE_BIN=$(readlink -f "$(command -v node)")
-  setcap 'cap_net_bind_service=+ep' "$NODE_BIN" || warn "setcap failed, will fallback to root"
+  setcap 'cap_net_bind_service=+ep' "$NODE_BIN" || warn "setcap failed (not critical on some systems)"
 fi
 
-# ---------- firewall ----------
 if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
   step "Opening firewall port $PORT"
   ufw allow "$PORT/tcp" >/dev/null || true
 fi
 
-# ---------- PM2 service ----------
-step "Starting AdTrack via PM2"
-sudo -u "$SERVICE_USER" -H bash -lc "cd '$INSTALL_DIR' && pm2 delete adtrack >/dev/null 2>&1; pm2 start src/server.js --name adtrack --update-env"
+step "Starting Cloakly via PM2"
+sudo -u "$SERVICE_USER" -H bash -lc "cd '$INSTALL_DIR' && pm2 delete cloakly >/dev/null 2>&1; pm2 start src/server.js --name cloakly --update-env"
 sudo -u "$SERVICE_USER" -H bash -lc "pm2 save"
 
-# systemd unit so it survives reboot
 step "Installing systemd service for autostart"
 env PATH="$PATH:/usr/bin" pm2 startup systemd -u "$SERVICE_USER" --hp "/home/$SERVICE_USER" >/tmp/pm2_startup 2>&1 || true
-# the command above prints a setup command already run by root; re-run just in case
 tail -1 /tmp/pm2_startup | grep -E '^(sudo\s+)?env' | bash || true
 
-# ---------- done ----------
 IP=$(curl -fsSL --max-time 3 https://api.ipify.org || hostname -I | awk '{print $1}')
 sleep 1
 
 echo
-echo -e "${C_GREEN}======================================================${C_RESET}"
-echo -e "${C_GREEN}  AdTrack installed successfully${C_RESET}"
-echo -e "${C_GREEN}======================================================${C_RESET}"
+echo -e "${GRN}========================================================${RST}"
+echo -e "${GRN}  Cloakly installed successfully${RST}"
+echo -e "${GRN}========================================================${RST}"
 echo
 echo -e "  Public landing : http://$IP/"
 echo -e "  Dashboard      : http://$IP/admin"
-echo -e "  Demo tracker   : http://$IP/t/demo"
 echo
-echo -e "  Admin token    : ${C_YELLOW}$ADMIN_TOKEN${C_RESET}"
+echo -e "  Admin token    : ${YLW}$ADMIN_TOKEN${RST}"
 echo -e "  (also stored in $ENV_FILE)"
 echo
-echo -e "  Logs           : sudo -u $SERVICE_USER pm2 logs adtrack"
-echo -e "  Restart        : sudo -u $SERVICE_USER pm2 restart adtrack"
+echo -e "  Logs           : sudo -u $SERVICE_USER pm2 logs cloakly"
+echo -e "  Restart        : sudo -u $SERVICE_USER pm2 restart cloakly"
 echo -e "  Update         : sudo bash $INSTALL_DIR/install.sh"
 echo
-echo -e "  To point a domain here:"
-echo -e "    1) set an A-record  your-domain.com -> $IP"
-echo -e "    2) it will just work on http://your-domain.com"
-echo -e "    3) for HTTPS:  sudo bash $INSTALL_DIR/install-https.sh your-domain.com"
+echo -e "  To attach a domain:"
+echo -e "    1) A-record  your-domain.com -> $IP"
+echo -e "    2) In dashboard: edit your flow -> set Custom domain"
 echo
