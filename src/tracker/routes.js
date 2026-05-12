@@ -14,6 +14,7 @@ const LANDINGS_DIR = path.join(__dirname, '..', '..', 'landings');
 
 // -------- prepared statements --------
 const getCampaignBySlug = db.prepare('SELECT * FROM campaigns WHERE slug = ? AND status = ?');
+const getCampaignByDomain = db.prepare("SELECT * FROM campaigns WHERE domain = ? AND status = 'active' LIMIT 1");
 const getRule = db.prepare('SELECT * FROM cloaker_rules WHERE id = ?');
 const getLanding = db.prepare('SELECT * FROM landings WHERE id = ?');
 const getOffer = db.prepare('SELECT * FROM offers WHERE id = ?');
@@ -46,19 +47,19 @@ function renderLanding(html, ctx) {
   return html.replace(/\{\{(\w+)\}\}/g, (_, k) => (ctx[k] == null ? '' : String(ctx[k])));
 }
 
-// ---------- MAIN CLICK HANDLER ----------
-// GET /t/:slug?sub1=...&sub2=...
-router.get('/t/:slug', (req, res) => {
-  const camp = getCampaignBySlug.get(req.params.slug, 'active');
-  if (!camp) return res.status(404).send('Campaign not found');
+function normalizeHost(h) {
+  if (!h) return '';
+  return h.toLowerCase().split(':')[0].replace(/^www\./, '');
+}
 
+// ---------- core click processing ----------
+function handleClick(camp, req, res) {
   const rule = camp.cloaker_rule_id ? getRule.get(camp.cloaker_rule_id) : null;
   const decision = evaluate(req, rule);
 
   const clickid = nanoid(12);
   const now = Date.now();
 
-  // compute cost per click
   let cost = 0;
   if (camp.cost_model === 'cpc') cost = camp.cost_value || 0;
 
@@ -87,15 +88,12 @@ router.get('/t/:slug', (req, res) => {
     cost,
   };
 
-  // Decide destination:
-  //   - cloaked => white landing (inline render, no redirect so bots don't see real URL)
-  //   - otherwise => prelander (if set) OR direct money link via /go/:clickid
+  // Cloaked visitors get the white page inline (no redirect).
   if (decision.cloak) {
     const white = camp.white_landing_id ? getLanding.get(camp.white_landing_id) : null;
     click.destination = white ? `white:${white.template}` : 'white:fallback';
     insertClick.run(click);
 
-    // Serve white HTML
     let html = white ? readTemplate(white.template) : null;
     if (!html) html = defaultWhiteHtml();
     res.set('Cache-Control', 'no-store');
@@ -104,7 +102,7 @@ router.get('/t/:slug', (req, res) => {
     }));
   }
 
-  // Real traffic
+  // Real traffic with prelander
   if (camp.prelander_id) {
     const pre = getLanding.get(camp.prelander_id);
     if (pre) {
@@ -121,7 +119,7 @@ router.get('/t/:slug', (req, res) => {
     }
   }
 
-  // Direct to money offer
+  // Direct redirect to money offer
   const offer = camp.money_offer_id ? getOffer.get(camp.money_offer_id) : null;
   if (!offer) {
     click.destination = 'noop';
@@ -132,10 +130,33 @@ router.get('/t/:slug', (req, res) => {
   click.destination = finalUrl;
   insertClick.run(click);
   res.redirect(302, finalUrl);
+}
+
+// ---------- domain-based entry (root of a custom domain) ----------
+// If the host on the incoming request matches a campaign.domain, treat it as a click.
+router.use((req, res, next) => {
+  // Only root path for domain routing, and only GET.
+  if (req.method !== 'GET' || req.path !== '/') return next();
+
+  const host = normalizeHost(req.headers.host);
+  if (!host) return next();
+
+  // Ignore requests to the admin dashboard or known paths (none here; root only).
+  const camp = getCampaignByDomain.get(host);
+  if (!camp) return next();
+
+  return handleClick(camp, req, res);
+});
+
+// ---------- MAIN CLICK HANDLER (slug mode) ----------
+// GET /t/:slug?sub1=...&sub2=...
+router.get('/t/:slug', (req, res) => {
+  const camp = getCampaignBySlug.get(req.params.slug, 'active');
+  if (!camp) return res.status(404).send('Campaign not found');
+  return handleClick(camp, req, res);
 });
 
 // ---------- Prelander -> money ----------
-// GET /go/:clickid  -> redirects to the actual offer URL
 router.get('/go/:clickid', (req, res) => {
   const click = getClick.get(req.params.clickid);
   if (!click) return res.status(404).send('Click not found');
@@ -152,18 +173,15 @@ router.get('/go/:clickid', (req, res) => {
 });
 
 // ---------- JS pixel / browser ping ----------
-// Used by landings to prove the visitor is a real browser.
 router.get('/px/:clickid.gif', (req, res) => {
   const click = getClick.get(req.params.clickid);
   if (click) insertEvent.run(click.id, 'js_ping', Date.now(), JSON.stringify(req.query));
   res.set('Content-Type', 'image/gif');
   res.set('Cache-Control', 'no-store');
-  // 1x1 transparent GIF
   res.end(Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
 });
 
 // ---------- S2S postback ----------
-// GET /postback?clickid=xxx&payout=25&status=approved&tx=abc
 router.get('/postback', (req, res) => {
   const clickid = req.query.clickid;
   if (!clickid) return res.status(400).json({ ok: false, error: 'clickid required' });

@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   slug            TEXT NOT NULL UNIQUE, -- public id used in /t/:slug
   name            TEXT NOT NULL,
+  domain          TEXT DEFAULT '',     -- optional: attach this campaign to a domain (root URL)
   source          TEXT DEFAULT '',     -- facebook, google, tiktok...
   cost_model      TEXT DEFAULT 'cpc',  -- cpc, cpm, cpa
   cost_value      REAL DEFAULT 0,
@@ -113,5 +114,13 @@ CREATE INDEX IF NOT EXISTS idx_events_click ON events(click_id);
 `;
 
 db.exec(SCHEMA);
+
+// ---- lightweight migrations ----
+function hasColumn(table, col) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().some(c => c.name === col);
+}
+if (!hasColumn('campaigns', 'domain')) {
+  db.exec(`ALTER TABLE campaigns ADD COLUMN domain TEXT DEFAULT ''`);
+}
 
 module.exports = db;

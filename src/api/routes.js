@@ -147,7 +147,7 @@ function crud(table, fields, { orderBy = 'id DESC' } = {}) {
 }
 
 router.use('/campaigns', crud('campaigns', [
-  'slug', 'name', 'source', 'cost_model', 'cost_value',
+  'slug', 'name', 'domain', 'source', 'cost_model', 'cost_value',
   'white_landing_id', 'money_offer_id', 'prelander_id',
   'cloaker_rule_id', 'status',
 ]));

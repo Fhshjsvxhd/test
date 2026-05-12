@@ -372,7 +372,7 @@ function app() {
 
     listColumns() {
       switch (this.tab) {
-        case 'campaigns': return ['slug','name','source','status'];
+        case 'campaigns': return ['slug','name','domain','source','status'];
         case 'offers':    return ['name','url','payout','country'];
         case 'landings':  return ['name','kind','template'];
         case 'cloaker':   return ['name','block_countries','block_ua','allow_devices'];
@@ -396,7 +396,7 @@ function app() {
 
     defaultRow() {
       switch (this.tab) {
-        case 'campaigns': return { slug:'', name:'', source:'', cost_model:'cpc', cost_value:0, status:'active' };
+        case 'campaigns': return { slug:'', name:'', domain:'', source:'', cost_model:'cpc', cost_value:0, status:'active' };
         case 'offers':    return { name:'', url:'', payout:0, country:'' };
         case 'landings':  return { name:'', kind:'white', template:'' };
         case 'cloaker':   return {
@@ -411,8 +411,9 @@ function app() {
     editorFields() {
       switch (this.tab) {
         case 'campaigns': return [
-          {name:'slug',label:'Slug (URL id)'},
+          {name:'slug',label:'Slug (URL id for /t/:slug)'},
           {name:'name',label:'Name'},
+          {name:'domain',label:'Domain (optional, e.g. offer.example.com) — root URL of this domain will trigger the campaign',full:true},
           {name:'source',label:'Source'},
           {name:'cost_model',label:'Cost model',type:'select',options:[{value:'cpc',label:'CPC'},{value:'cpm',label:'CPM'},{value:'cpa',label:'CPA'}]},
           {name:'cost_value',label:'Cost value',type:'number'},

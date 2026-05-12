@@ -32,7 +32,56 @@ A modern, self-hosted ad tracker with a built-in cloaker, landing-page engine an
 - Real-time click feed (auto-refresh every 5s)
 - CRUD UI for campaigns, offers, landings, cloaker rules
 
-## Quick start
+## Install on VPS in one command
+
+Any fresh Ubuntu 20.04+ / Debian 11+ / Rocky / AlmaLinux server:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Fhshjsvxhd/test/main/install.sh | sudo bash
+```
+
+That's it. The script will:
+- Install Node.js 20, PM2, sqlite3 and build tools
+- Create a system user `adtrack`
+- Clone the repo into `/opt/adtrack`
+- Generate a random admin token (printed at the end)
+- Seed a demo campaign
+- Bind Node to port 80 (no nginx needed)
+- Register PM2 for autostart on boot
+- Open the firewall
+
+At the end it prints URLs:
+- `http://YOUR-SERVER-IP/` — public landing
+- `http://YOUR-SERVER-IP/admin` — dashboard
+- `http://YOUR-SERVER-IP/t/demo` — demo tracker link
+
+### Point a domain at it
+
+1. In your DNS provider, add an **A-record**:  
+   `offer.example.com -> YOUR-SERVER-IP`
+2. Wait 1–5 minutes for DNS.
+3. Open the dashboard -> **Campaigns** -> edit a campaign -> set the **Domain** field to `offer.example.com`.
+4. Visiting `http://offer.example.com/` now triggers that campaign (cloaker + landing + offer).
+
+No nginx configuration needed. Multiple domains on one server just work — each campaign can have its own domain.
+
+### Optional: add HTTPS
+
+```bash
+sudo bash /opt/adtrack/install-https.sh offer.example.com you@example.com
+```
+
+This installs nginx + Let's Encrypt certificate and moves AdTrack behind nginx on port 3000.
+
+### Update
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Fhshjsvxhd/test/main/install.sh | sudo bash
+```
+
+The same command updates an existing install in place.
+
+## Local dev
 
 ```bash
 npm install
